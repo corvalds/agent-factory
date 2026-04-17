@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: agentfactory
+      POSTGRES_USER: agentfactory
+      POSTGRES_PASSWORD: agentfactory
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agentfactory"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  platform:
+    build: ./platform
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: agentfactory
+      DB_USER: agentfactory
+      DB_PASSWORD: agentfactory
+      AF_API_KEY: dev-api-key-change-me
+      AF_ENCRYPTION_KEY: "01234567890123456789012345678901"
+      AGENT_SERVICE_URL: http://agent-service:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  agent-service:
+    build: ./agent-service
+    ports:
+      - "8000:8000"
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+      NEXT_PUBLIC_API_KEY: dev-api-key-change-me
+    depends_on:
+      - platform
+
+volumes:
+  pgdata:

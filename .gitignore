@@ -1,0 +1,38 @@
+# Java / Gradle
+platform/build/
+platform/.gradle/
+platform/bin/
+*.class
+*.jar
+!platform/gradle/wrapper/gradle-wrapper.jar
+*.war
+
+# Python
+agent-service/__pycache__/
+agent-service/.venv/
+agent-service/*.pyc
+.env
+
+# Node / Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Secrets
+*.pem
+*.key
+credentials.json
