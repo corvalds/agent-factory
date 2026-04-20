@@ -45,11 +45,21 @@ public class SecurityConfig {
             String auth = request.getHeader("Authorization");
             if (auth != null && auth.startsWith("Bearer ") && auth.substring(7).equals(expectedKey)) {
                 chain.doFilter(req, res);
-            } else {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType("application/json");
-                response.getWriter().write("{\"error\":\"Invalid or missing API key\"}");
+                return;
             }
+
+            // SSE endpoints: allow API key via query param (EventSource can't send headers)
+            if (request.getRequestURI().endsWith("/stream")) {
+                String token = request.getParameter("token");
+                if (token != null && token.equals(expectedKey)) {
+                    chain.doFilter(req, res);
+                    return;
+                }
+            }
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\":\"Invalid or missing API key\"}");
         }
     }
 }
