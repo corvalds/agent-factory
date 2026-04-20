@@ -145,6 +145,9 @@ export default function SettingsPage() {
               </div>
               <div className="space-y-1">
                 <div className="flex justify-between text-[12px] py-1.5 border-b border-[#1a1a1d]">
+                  <span className="text-[#666]">API Key</span><span className="text-[#ccc] font-mono">••••••••</span>
+                </div>
+                <div className="flex justify-between text-[12px] py-1.5 border-b border-[#1a1a1d]">
                   <span className="text-[#666]">Type</span><span className="text-[#ccc] font-mono">{p.type}</span>
                 </div>
                 <div className="flex justify-between text-[12px] py-1.5 border-b border-[#1a1a1d]">
