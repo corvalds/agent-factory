@@ -176,6 +176,34 @@ export default function NewTaskPage() {
             </label>
           </div>
 
+          <div className="mb-4">
+            <label className="block text-[11px] text-[#666] uppercase tracking-wider mb-1.5">Sandbox Image</label>
+            <select className="w-full bg-[#0a0a0b] border border-[#333] rounded-md px-2.5 py-2 text-[13px] text-white">
+              <option value="python:3.12-slim">python:3.12-slim</option>
+              <option value="node:20-slim">node:20-slim</option>
+              <option value="ubuntu:24.04">ubuntu:24.04</option>
+              <option value="custom">Custom...</option>
+            </select>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-[11px] text-[#666] uppercase tracking-wider mb-1.5">Dependencies</label>
+            <input
+              className="w-full bg-[#0a0a0b] border border-[#333] rounded-md px-2.5 py-2 text-[13px] text-white placeholder-[#555]"
+              placeholder="e.g. requests, beautifulsoup4"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-[11px] text-[#666] uppercase tracking-wider mb-1.5">Timeout</label>
+            <select className="w-full bg-[#0a0a0b] border border-[#333] rounded-md px-2.5 py-2 text-[13px] text-white">
+              <option value="5">5 minutes</option>
+              <option value="15">15 minutes</option>
+              <option value="30">30 minutes</option>
+              <option value="60">1 hour</option>
+            </select>
+          </div>
+
           <button
             onClick={handleLaunch}
             disabled={!structured || launching}
