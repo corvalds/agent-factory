@@ -16,6 +16,7 @@ export default function TaskListPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<string>("ALL");
 
   useEffect(() => {
     api.tasks
@@ -71,8 +72,6 @@ export default function TaskListPage() {
       </div>
     );
   }
-
-  const [filter, setFilter] = useState<string>("ALL");
 
   const counts: Record<string, number> = { ALL: tasks.length };
   for (const t of tasks) counts[t.status] = (counts[t.status] || 0) + 1;
