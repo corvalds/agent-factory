@@ -1,0 +1,32 @@
+platform/src/main/java/com/agentfactory/config/GlobalExceptionHandler.java
+  0b4152c76b5dcdb4 1-55
+platform/src/main/java/com/agentfactory/controller/TaskController.java
+  0b4152c76b5dcdb4 92-142
+platform/src/main/java/com/agentfactory/controller/ProviderController.java
+  0b4152c76b5dcdb4 3,5-6,8,12-13,20-21,23-25,27-28,71-121
+platform/src/main/java/com/agentfactory/repository/TaskEventRepository.java
+  0b4152c76b5dcdb4 3,13
+platform/src/main/java/com/agentfactory/config/DataInitializer.java
+  0b4152c76b5dcdb4 1-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.5",
+  "base_commit_sha": "7f3b95913fe6c8392b00163937c1e02568c196df",
+  "prompts": {
+    "0b4152c76b5dcdb4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e69538df-050b-4a0e-b886-1771d26f8a5f",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "corvalds",
+      "messages": [],
+      "total_additions": 613,
+      "total_deletions": 3,
+      "accepted_lines": 1536,
+      "overriden_lines": 4,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/5bef76eb72d84a4c6e98450f4f23e55e44e57732505fe9e1b36432099494ee06"
+    }
+  }
+}
