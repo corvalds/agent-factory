@@ -120,6 +120,7 @@ export default function TaskListPage() {
             <th className="text-left py-2.5 px-3 text-[11px] text-[#555] uppercase tracking-wider">Task</th>
             <th className="text-left py-2.5 px-3 text-[11px] text-[#555] uppercase tracking-wider">Status</th>
             <th className="text-left py-2.5 px-3 text-[11px] text-[#555] uppercase tracking-wider">Agent / Model</th>
+            <th className="text-left py-2.5 px-3 text-[11px] text-[#555] uppercase tracking-wider">Sandbox</th>
             <th className="text-left py-2.5 px-3 text-[11px] text-[#555] uppercase tracking-wider">Created</th>
           </tr>
         </thead>
@@ -141,6 +142,9 @@ export default function TaskListPage() {
               </td>
               <td className="py-3 px-3 font-mono text-[12px] text-[#888]">
                 {task.agentType} / {task.modelId || "—"}
+              </td>
+              <td className="py-3 px-3 font-mono text-[12px] text-[#888]">
+                {task.sandboxEnabled ? "Docker" : "None"}
               </td>
               <td className="py-3 px-3 font-mono text-[12px] text-[#888]">
                 {new Date(task.createdAt).toLocaleDateString()}
