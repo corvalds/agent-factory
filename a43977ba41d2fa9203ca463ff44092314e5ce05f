@@ -1,0 +1,68 @@
+platform/src/main/java/com/agentfactory/controller/StreamController.java
+  0b4152c76b5dcdb4 1-52
+platform/src/main/java/com/agentfactory/config/DockerConfig.java
+  0b4152c76b5dcdb4 1-47
+platform/src/main/java/com/agentfactory/service/ConversationSessionService.java
+  0b4152c76b5dcdb4 1-56
+platform/src/main/java/com/agentfactory/service/SandboxService.java
+  0b4152c76b5dcdb4 1-149
+platform/build.gradle
+  0b4152c76b5dcdb4 25-26
+platform/src/main/java/com/agentfactory/dto/DefineResponse.java
+  0b4152c76b5dcdb4 1-9
+platform/src/main/java/com/agentfactory/service/TaskDefinitionService.java
+  0b4152c76b5dcdb4 1-84
+platform/src/main/java/com/agentfactory/controller/TaskDefinitionController.java
+  0b4152c76b5dcdb4 1-51
+platform/src/main/java/com/agentfactory/dto/ExecuteRequest.java
+  0b4152c76b5dcdb4 1-10
+platform/src/main/java/com/agentfactory/service/AgentServiceClient.java
+  0b4152c76b5dcdb4 3-8,18-21,37-39,43-44,47-49,53-75
+platform/src/main/java/com/agentfactory/service/TaskEventService.java
+  0b4152c76b5dcdb4 1-86
+agent-service/requirements.txt
+  0b4152c76b5dcdb4 3,5-6
+platform/src/main/java/com/agentfactory/service/TaskExecutionService.java
+  0b4152c76b5dcdb4 1-202
+platform/src/main/java/com/agentfactory/service/CostCalculationService.java
+  0b4152c76b5dcdb4 1-38
+platform/src/main/resources/application.yml
+  0b4152c76b5dcdb4 26-36
+platform/src/main/java/com/agentfactory/model/ConversationSession.java
+  0b4152c76b5dcdb4 1-50
+agent-service/agent_runner.py
+  0b4152c76b5dcdb4 1-2,5-65,67-116,123,125-136,138,144-148,150,154,156,158-185,187,190,192-194,213,226
+platform/src/main/java/com/agentfactory/service/SseEmitterService.java
+  0b4152c76b5dcdb4 1-75
+platform/src/main/java/com/agentfactory/dto/ExecuteResponse.java
+  0b4152c76b5dcdb4 1-11
+platform/src/main/java/com/agentfactory/dto/DefineRequest.java
+  0b4152c76b5dcdb4 1-10
+agent-service/main.py
+  0b4152c76b5dcdb4 1-2,7,11,13-17,21,36-38,59-60
+platform/src/main/java/com/agentfactory/repository/TaskEventRepository.java
+  0b4152c76b5dcdb4 5,10-11
+platform/src/main/java/com/agentfactory/controller/TaskController.java
+  0b4152c76b5dcdb4 4,6-8,13,15,22-24,26-29,31-33,66-89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.5",
+  "base_commit_sha": "a43977ba41d2fa9203ca463ff44092314e5ce05f",
+  "prompts": {
+    "0b4152c76b5dcdb4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e69538df-050b-4a0e-b886-1771d26f8a5f",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "corvalds",
+      "messages": [],
+      "total_additions": 3127,
+      "total_deletions": 1655,
+      "accepted_lines": 2335,
+      "overriden_lines": 9,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/2d277e5a05c5dbf64ad6fc4bc3fadac1e450b164b9f2b9fd6425942e34eb35c5"
+    }
+  }
+}
