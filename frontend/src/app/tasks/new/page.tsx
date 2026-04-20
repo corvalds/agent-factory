@@ -168,13 +168,10 @@ export default function NewTaskPage() {
 
           <div className="mb-4">
             <label className="block text-[11px] text-[#666] uppercase tracking-wider mb-1.5">Sandbox</label>
-            <label className="flex items-center gap-2 text-[13px] text-[#ccc] cursor-pointer">
-              <input
-                type="checkbox"
-                checked={sandboxEnabled}
-                onChange={(e) => setSandboxEnabled(e.target.checked)}
-                className="accent-[#6366f1]"
-              />
+            <label className="flex items-center gap-2 text-[13px] text-[#ccc] cursor-pointer" onClick={() => setSandboxEnabled(!sandboxEnabled)}>
+              <div className={`w-9 h-5 rounded-full relative transition-colors ${sandboxEnabled ? "bg-[#6366f1]" : "bg-[#333]"}`}>
+                <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${sandboxEnabled ? "left-[18px]" : "left-0.5"}`} />
+              </div>
               Enable Docker sandbox
             </label>
           </div>
