@@ -1,0 +1,24 @@
+frontend/src/app/tasks/new/page.tsx
+  0b4152c76b5dcdb4 171
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.5",
+  "base_commit_sha": "3824dad9db6638e09c5eb7830fe87daf02aa7aee",
+  "prompts": {
+    "0b4152c76b5dcdb4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e69538df-050b-4a0e-b886-1771d26f8a5f",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "corvalds",
+      "messages": [],
+      "total_additions": 27,
+      "total_deletions": 1,
+      "accepted_lines": 1457,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/a9eb49f76d5d95fb2f60ebc2858c0d50df413c6cd0f33e7fc272ba12b1eb4506"
+    }
+  }
+}
