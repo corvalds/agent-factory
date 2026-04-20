@@ -72,9 +72,24 @@ export default function TaskListPage() {
     );
   }
 
+  const [filter, setFilter] = useState<string>("ALL");
+
+  const counts: Record<string, number> = { ALL: tasks.length };
+  for (const t of tasks) counts[t.status] = (counts[t.status] || 0) + 1;
+
+  const filtered = filter === "ALL" ? tasks : tasks.filter((t) => t.status === filter);
+
+  const tabs = [
+    { key: "ALL", label: "All" },
+    { key: "RUNNING", label: "Running" },
+    { key: "PENDING", label: "Pending" },
+    { key: "COMPLETED", label: "Completed" },
+    { key: "FAILED", label: "Failed" },
+  ];
+
   return (
     <div className="p-8">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-5">
         <h1 className="text-xl font-semibold text-white">Tasks</h1>
         <Link
           href="/tasks/new"
@@ -82,6 +97,22 @@ export default function TaskListPage() {
         >
           + New Task
         </Link>
+      </div>
+
+      <div className="flex border-b border-[#222] mb-0">
+        {tabs.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setFilter(tab.key)}
+            className={`px-5 py-3 text-[13px] border-b-2 transition-colors ${
+              filter === tab.key
+                ? "text-white border-[#6366f1]"
+                : "text-[#666] border-transparent hover:text-[#aaa]"
+            }`}
+          >
+            {tab.label} ({counts[tab.key] || 0})
+          </button>
+        ))}
       </div>
 
       <table className="w-full">
@@ -94,7 +125,7 @@ export default function TaskListPage() {
           </tr>
         </thead>
         <tbody>
-          {tasks.map((task) => (
+          {filtered.map((task) => (
             <tr key={task.id} className="border-b border-[#1a1a1d] hover:bg-[#111113] transition-colors">
               <td className="py-3 px-3">
                 <Link href={`/tasks/${task.id}`} className="block">
