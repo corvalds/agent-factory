@@ -89,5 +89,56 @@ public class TaskController {
         return Map.of("available", true, "estimatedCost", estimate.toPlainString(), "model", modelId);
     }
 
+    @GetMapping(value = "/{id}/export", produces = "text/plain")
+    public org.springframework.http.ResponseEntity<String> export(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "markdown") String format) {
+        Task task = taskService.findById(id);
+        if (task.getResult() == null) {
+            throw new IllegalStateException("Task has no result to export");
+        }
+
+        String content;
+        String contentType;
+        String filename;
+
+        switch (format.toLowerCase()) {
+            case "json" -> {
+                content = "{\"id\":" + task.getId()
+                    + ",\"name\":\"" + escapeJson(task.getName()) + "\""
+                    + ",\"status\":\"" + task.getStatus() + "\""
+                    + ",\"result\":\"" + escapeJson(task.getResult()) + "\""
+                    + ",\"agentType\":\"" + task.getAgentType() + "\""
+                    + ",\"modelId\":\"" + (task.getModelId() != null ? task.getModelId() : "") + "\""
+                    + "}";
+                contentType = "application/json";
+                filename = "task-" + id + "-result.json";
+            }
+            case "text" -> {
+                content = task.getResult();
+                contentType = "text/plain";
+                filename = "task-" + id + "-result.txt";
+            }
+            default -> {
+                content = "# " + task.getName() + "\n\n"
+                    + "**Status:** " + task.getStatus() + "\n"
+                    + "**Agent:** " + task.getAgentType() + " / " + (task.getModelId() != null ? task.getModelId() : "—") + "\n\n"
+                    + "## Result\n\n" + task.getResult();
+                contentType = "text/markdown";
+                filename = "task-" + id + "-result.md";
+            }
+        }
+
+        return org.springframework.http.ResponseEntity.ok()
+            .header("Content-Type", contentType)
+            .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+            .body(content);
+    }
+
+    private String escapeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
+    }
+
     record StatusUpdate(TaskStatus status) {}
 }
