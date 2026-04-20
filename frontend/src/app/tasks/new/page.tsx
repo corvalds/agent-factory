@@ -168,7 +168,7 @@ export default function NewTaskPage() {
 
           <div className="mb-4">
             <label className="block text-[11px] text-[#666] uppercase tracking-wider mb-1.5">Sandbox</label>
-            <label className="flex items-center gap-2 text-[13px] cursor-pointer">
+            <label className="flex items-center gap-2 text-[13px] text-[#ccc] cursor-pointer">
               <input
                 type="checkbox"
                 checked={sandboxEnabled}
