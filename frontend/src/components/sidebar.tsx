@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 const nav = [
   { label: "Tasks", href: "/", icon: "□" },
   { label: "New Task", href: "/tasks/new", icon: "+" },
-  { label: "LLM Providers", href: "/settings", icon: "◇" },
 ];
 
 export function Sidebar() {
@@ -45,11 +44,37 @@ export function Sidebar() {
       <div className="px-5 pt-4 pb-1.5 text-[11px] text-[#555] uppercase tracking-wider">
         Resources
       </div>
+      <Link
+        href="/settings"
+        className={`flex items-center gap-2 px-5 py-2 text-[13px] transition-colors ${
+          pathname === "/settings"
+            ? "text-white bg-[#1a1a1d] border-r-2 border-[#6366f1]"
+            : "text-[#888] hover:text-[#ccc] hover:bg-[#1a1a1d]"
+        }`}
+      >
+        <span className="w-4 text-center text-xs">◇</span>
+        LLM Providers
+      </Link>
       <div className="flex items-center gap-2 px-5 py-2 text-[13px] text-[#444]">
         <span className="w-4 text-center text-xs">◆</span>
         Knowledge Base
         <span className="text-[10px] text-[#444]">(V2)</span>
       </div>
+
+      <div className="px-5 pt-4 pb-1.5 text-[11px] text-[#555] uppercase tracking-wider">
+        System
+      </div>
+      <Link
+        href="/settings"
+        className={`flex items-center gap-2 px-5 py-2 text-[13px] transition-colors ${
+          pathname === "/settings"
+            ? "text-white bg-[#1a1a1d] border-r-2 border-[#6366f1]"
+            : "text-[#888] hover:text-[#ccc] hover:bg-[#1a1a1d]"
+        }`}
+      >
+        <span className="w-4 text-center text-xs">⚙</span>
+        Settings
+      </Link>
     </aside>
   );
 }
