@@ -1,16 +1,24 @@
-from fastapi import FastAPI
+import os
+from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
 from task_definer import TaskDefiner
 from agent_runner import AgentRunner
 
-app = FastAPI(title="Agent Factory - Agent Service", version="0.1.0")
+app = FastAPI(title="Agent Factory - Agent Service", version="0.2.0")
 definer = TaskDefiner()
 runner = AgentRunner()
+
+INTERNAL_KEY = os.environ.get("AF_INTERNAL_KEY", "internal-dev-key")
+
+
+def verify_internal(x_internal_key: str = Header(None)):
+    if INTERNAL_KEY and x_internal_key != INTERNAL_KEY:
+        raise HTTPException(status_code=401, detail="Invalid internal key")
 
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "service": "agent-service"}
+    return {"status": "ok", "service": "agent-service", "version": "0.2.0"}
 
 
 class DefineRequest(BaseModel):
@@ -25,8 +33,9 @@ class DefineResponse(BaseModel):
     is_complete: bool = False
 
 
-@app.post("/define", response_model=DefineResponse)
-async def define(request: DefineRequest):
+@app.post("/define", response_model=DefineResponse, dependencies=[])
+async def define(request: DefineRequest, x_internal_key: str = Header(None)):
+    verify_internal(x_internal_key)
     return await definer.process(request.message, request.conversation, request.model)
 
 
@@ -47,5 +56,6 @@ class ExecuteResponse(BaseModel):
 
 
 @app.post("/execute", response_model=ExecuteResponse)
-async def execute(request: ExecuteRequest):
+async def execute(request: ExecuteRequest, x_internal_key: str = Header(None)):
+    verify_internal(x_internal_key)
     return await runner.run(request)

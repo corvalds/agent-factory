@@ -23,3 +23,14 @@ af:
   api-key: ${AF_API_KEY:dev-api-key-change-me}
   encryption-key: ${AF_ENCRYPTION_KEY:01234567890123456789012345678901}
   agent-service-url: ${AGENT_SERVICE_URL:http://localhost:8000}
+  sandbox:
+    docker-host: ${DOCKER_HOST:unix:///var/run/docker.sock}
+    cpu-limit: ${SANDBOX_CPU:1}
+    memory-limit-mb: ${SANDBOX_MEMORY:512}
+    timeout-seconds: ${SANDBOX_TIMEOUT:300}
+  pricing:
+    gpt-4o: "0.0000025"
+    gpt-4o-mini: "0.00000015"
+    claude-sonnet-4: "0.000003"
+    claude-opus-4: "0.000015"
+    deepseek-v3: "0.00000027"
