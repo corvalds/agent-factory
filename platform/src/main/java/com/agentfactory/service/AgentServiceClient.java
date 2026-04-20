@@ -21,9 +21,12 @@ public class AgentServiceClient {
 
     private final RestClient restClient;
 
-    public AgentServiceClient(@Value("${af.agent-service-url:http://localhost:8000}") String baseUrl) {
+    public AgentServiceClient(
+            @Value("${af.agent-service-url:http://localhost:8000}") String baseUrl,
+            @Value("${af.internal-key:internal-dev-key}") String internalKey) {
         this.restClient = RestClient.builder()
                 .baseUrl(baseUrl)
+                .defaultHeader("X-Internal-Key", internalKey)
                 .build();
     }
 

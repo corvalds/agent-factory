@@ -75,13 +75,15 @@ public class TaskExecutionService {
         boolean useSandbox = shouldUseSandbox(task);
 
         try {
-            String apiKey = resolveApiKey(task.getModelId());
+            String[] providerInfo = resolveProvider(task.getModelId());
+            String apiKey = providerInfo != null ? providerInfo[0] : null;
+            String baseUrl = providerInfo != null ? providerInfo[1] : null;
             ExecuteResponse response;
 
             if (useSandbox) {
                 response = runSandboxed(task, apiKey);
             } else {
-                response = runDirect(task, apiKey);
+                response = runDirect(task, apiKey, baseUrl);
             }
 
             BigDecimal totalCost = processSteps(task, response);
@@ -122,14 +124,15 @@ public class TaskExecutionService {
         return agentRequires || task.isSandboxEnabled();
     }
 
-    private ExecuteResponse runDirect(Task task, String apiKey) {
+    private ExecuteResponse runDirect(Task task, String apiKey, String baseUrl) {
         ExecuteRequest request = new ExecuteRequest(
             task.getBackground() != null ? task.getBackground() : "",
             task.getGoal() != null ? task.getGoal() : task.getName(),
             task.getAcceptanceCriteria() != null ? task.getAcceptanceCriteria() : "",
             task.getAgentType(),
             task.getModelId() != null ? task.getModelId() : "gpt-4o",
-            apiKey
+            apiKey,
+            baseUrl
         );
         return agentClient.execute(request);
     }
@@ -185,7 +188,7 @@ public class TaskExecutionService {
         return totalCost;
     }
 
-    private String resolveApiKey(String modelId) {
+    private String[] resolveProvider(String modelId) {
         if (modelId == null) return null;
         var providers = providerService.findActive();
         for (var provider : providers) {
@@ -193,7 +196,10 @@ public class TaskExecutionService {
                 List<String> models = Arrays.stream(provider.getModels().split(","))
                         .map(String::trim).toList();
                 if (models.contains(modelId)) {
-                    return providerService.decryptApiKey(provider.getId());
+                    return new String[]{
+                        providerService.decryptApiKey(provider.getId()),
+                        provider.getBaseUrl()
+                    };
                 }
             }
         }

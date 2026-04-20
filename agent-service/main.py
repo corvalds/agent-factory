@@ -25,6 +25,8 @@ class DefineRequest(BaseModel):
     message: str
     conversation: list[dict] = []
     model: str = "gpt-4o"
+    api_key: str | None = None
+    base_url: str | None = None
 
 
 class DefineResponse(BaseModel):
@@ -36,7 +38,7 @@ class DefineResponse(BaseModel):
 @app.post("/define", response_model=DefineResponse, dependencies=[])
 async def define(request: DefineRequest, x_internal_key: str = Header(None)):
     verify_internal(x_internal_key)
-    return await definer.process(request.message, request.conversation, request.model)
+    return await definer.process(request.message, request.conversation, request.model, request.api_key, request.base_url)
 
 
 class ExecuteRequest(BaseModel):
@@ -46,6 +48,7 @@ class ExecuteRequest(BaseModel):
     agent_type: str = "general-purpose"
     model: str = "gpt-4o"
     api_key: str | None = None
+    base_url: str | None = None
 
 
 class ExecuteResponse(BaseModel):

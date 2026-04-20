@@ -99,12 +99,16 @@ async def _execute_tool(name: str, args: dict) -> str:
     return f"Unknown tool: {name}"
 
 
-async def _llm_call_with_retry(model, messages, api_key=None, tools=None, max_retries=3):
+async def _llm_call_with_retry(model, messages, api_key=None, base_url=None, tools=None, max_retries=3):
     for attempt in range(max_retries):
         try:
             kwargs = {"model": model, "messages": messages}
             if api_key:
                 kwargs["api_key"] = api_key
+            if base_url:
+                kwargs["api_base"] = base_url
+                if not model.startswith(("openai/", "deepseek/", "anthropic/")):
+                    kwargs["model"] = f"openai/{model}"
             if tools:
                 kwargs["tools"] = tools
             return await litellm.acompletion(**kwargs)
@@ -151,6 +155,7 @@ class AgentRunner:
                     model=request.model,
                     messages=messages,
                     api_key=request.api_key,
+                    base_url=request.base_url,
                     tools=tools or None,
                 )
                 msg = response.choices[0].message

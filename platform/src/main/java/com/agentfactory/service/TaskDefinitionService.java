@@ -6,6 +6,8 @@ import com.agentfactory.model.ConversationSession;
 import com.agentfactory.model.Task;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -14,13 +16,16 @@ public class TaskDefinitionService {
     private final ConversationSessionService sessionService;
     private final AgentServiceClient agentClient;
     private final TaskService taskService;
+    private final ProviderService providerService;
 
     public TaskDefinitionService(ConversationSessionService sessionService,
                                   AgentServiceClient agentClient,
-                                  TaskService taskService) {
+                                  TaskService taskService,
+                                  ProviderService providerService) {
         this.sessionService = sessionService;
         this.agentClient = agentClient;
         this.taskService = taskService;
+        this.providerService = providerService;
     }
 
     public ConversationSession startConversation() {
@@ -39,10 +44,15 @@ public class TaskDefinitionService {
 
         boolean forceComplete = session.isAtTurnLimit();
 
+        String effectiveModel = model != null ? model : "gpt-4o";
+        var providerInfo = resolveProvider(effectiveModel);
+
         DefineRequest request = new DefineRequest(
             forceComplete ? message + "\n\n[SYSTEM: This is the final turn. Output the structured task definition now as JSON with keys: background, goal, acceptance_criteria.]" : message,
             session.getMessages(),
-            model != null ? model : "gpt-4o"
+            effectiveModel,
+            providerInfo != null ? providerInfo[0] : null,
+            providerInfo != null ? providerInfo[1] : null
         );
 
         DefineResponse response = agentClient.define(request);
@@ -80,5 +90,23 @@ public class TaskDefinitionService {
         Task saved = taskService.create(task);
         sessionService.complete(sessionId);
         return saved;
+    }
+
+    private String[] resolveProvider(String modelId) {
+        if (modelId == null) return null;
+        var providers = providerService.findActive();
+        for (var provider : providers) {
+            if (provider.getModels() != null) {
+                List<String> models = Arrays.stream(provider.getModels().split(","))
+                        .map(String::trim).toList();
+                if (models.contains(modelId)) {
+                    return new String[]{
+                        providerService.decryptApiKey(provider.getId()),
+                        provider.getBaseUrl()
+                    };
+                }
+            }
+        }
+        return null;
     }
 }
