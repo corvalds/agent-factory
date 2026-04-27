@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { api, Task, TaskEvent, createEventSource } from "@/lib/api";
+import { api, Task, TaskEvent, Artifact, createEventSource } from "@/lib/api";
 
 const phaseColors: Record<string, { dot: string; text: string }> = {
   observe: { dot: "border-[#60a5fa] bg-[#1a2a3a]", text: "text-[#60a5fa]" },
@@ -24,6 +24,12 @@ function parseEventData(data: string): Record<string, any> {
   try { return JSON.parse(data); } catch { return {}; }
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+}
+
 export default function TaskDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -37,12 +43,14 @@ export default function TaskDetailPage() {
   const esRef = useRef<EventSource | null>(null);
   const [error, setError] = useState<string | null>(null);
   const retryCountRef = useRef(0);
+  const [artifacts, setArtifacts] = useState<Artifact[]>([]);
 
   useEffect(() => {
-    Promise.all([api.tasks.get(id), api.tasks.events(id)])
-      .then(([t, evts]) => {
+    Promise.all([api.tasks.get(id), api.tasks.events(id), api.artifacts.list(id)])
+      .then(([t, evts, arts]) => {
         setTask(t);
         setEvents(evts);
+        setArtifacts(arts);
         computeCost(evts);
         if (t.status === "RUNNING" || t.status === "ANALYZING") {
           connectSSE(evts.length > 0 ? String(evts[evts.length - 1].id) : undefined);
@@ -72,6 +80,7 @@ export default function TaskDetailPage() {
           setTotalCost(d.total_cost_usd || "0");
           setTotalTokens(d.total_tokens || 0);
           api.tasks.get(id).then(setTask);
+          api.artifacts.list(id).then(setArtifacts);
           es.close();
         }
       } catch {}
@@ -81,6 +90,9 @@ export default function TaskDetailPage() {
     es.addEventListener("cost", handler);
     es.addEventListener("error", handler);
     es.addEventListener("completion", handler);
+    es.addEventListener("artifact", () => {
+      api.artifacts.list(id).then(setArtifacts);
+    });
     es.onerror = () => {
       es.close();
       retryCountRef.current += 1;
@@ -166,18 +178,13 @@ export default function TaskDetailPage() {
           >
             Clone
           </button>
-          {task.result && (
-            <button
-              onClick={() => {
-                const blob = new Blob([task.result || ""], { type: "text/markdown" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a"); a.href = url; a.download = `task-${id}-result.md`; a.click();
-                URL.revokeObjectURL(url);
-              }}
+          {artifacts.length > 0 && (
+            <a
+              href={api.artifacts.downloadAllUrl(id)}
               className="px-3.5 py-1.5 text-[12px] rounded-md bg-[#6366f1] text-white hover:bg-[#5558e6] transition-colors"
             >
               Export
-            </button>
+            </a>
           )}
         </div>
       </div>
@@ -231,11 +238,32 @@ export default function TaskDetailPage() {
             )}
           </div>
 
-          {task.result && (
+          {artifacts.length > 0 && (
             <div className="bg-[#111113] border border-[#222] rounded-lg p-4 mt-4">
-              <div className="text-[13px] font-semibold text-white mb-2">Result</div>
-              <div className="text-[13px] text-[#ccc] leading-relaxed bg-[#0a0a0b] border border-[#1a1a1d] rounded-md p-4 max-h-48 overflow-y-auto whitespace-pre-wrap">
-                {task.result}
+              <div className="text-[13px] font-semibold text-white mb-2">Artifacts</div>
+              <div className="space-y-2">
+                {artifacts.map((art) => (
+                  <div key={art.id} className="flex items-center justify-between bg-[#0a0a0b] border border-[#1a1a1d] rounded-md p-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="text-[11px] text-[#555] font-mono uppercase">{art.artifactType === "PRIMARY" ? "PRI" : "SUP"}</span>
+                      <div className="min-w-0">
+                        <div className="text-[13px] text-[#ccc] truncate">{art.filename}</div>
+                        <div className="text-[11px] text-[#555]">{art.mimeType} · {formatBytes(art.sizeBytes)}</div>
+                      </div>
+                    </div>
+                    {art.mimeType.startsWith("image/") ? (
+                      <a href={api.artifacts.contentUrl(art.id)} target="_blank" rel="noopener noreferrer"
+                        className="px-2.5 py-1 text-[11px] rounded border border-[#333] text-[#aaa] hover:text-white hover:bg-[#222] transition-colors shrink-0">
+                        View
+                      </a>
+                    ) : (
+                      <a href={api.artifacts.contentUrl(art.id)}
+                        className="px-2.5 py-1 text-[11px] rounded border border-[#333] text-[#aaa] hover:text-white hover:bg-[#222] transition-colors shrink-0">
+                        Download
+                      </a>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           )}

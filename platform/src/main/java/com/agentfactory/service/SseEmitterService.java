@@ -56,6 +56,28 @@ public class SseEmitterService {
         }
     }
 
+    public void emitArtifactReady(Long taskId, String artifactId) {
+        List<SseEmitter> taskEmitters = emitters.get(taskId);
+        if (taskEmitters == null || taskEmitters.isEmpty()) return;
+
+        try {
+            String json = "{\"artifactId\":\"" + artifactId + "\"}";
+            SseEmitter.SseEventBuilder builder = SseEmitter.event()
+                    .name("artifact")
+                    .data(json);
+
+            for (SseEmitter emitter : taskEmitters) {
+                try {
+                    emitter.send(builder);
+                } catch (Exception e) {
+                    removeEmitter(taskId, emitter);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to emit artifact event for task {}: {}", taskId, e.getMessage());
+        }
+    }
+
     public void completeAll(Long taskId) {
         List<SseEmitter> taskEmitters = emitters.remove(taskId);
         if (taskEmitters != null) {

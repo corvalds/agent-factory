@@ -13,7 +13,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -115,6 +118,36 @@ public class SandboxService {
             }
         }
         throw new RuntimeException("Sandbox timeout: no output after " + timeoutSeconds + "s");
+    }
+
+    public List<OutputFile> extractOutputFiles(SandboxContext ctx) {
+        Path outputDir = ctx.workDir().resolve("output");
+        List<OutputFile> files = new ArrayList<>();
+        if (!Files.exists(outputDir) || !Files.isDirectory(outputDir)) {
+            return files;
+        }
+        try (var stream = Files.list(outputDir)) {
+            stream.filter(Files::isRegularFile).forEach(path -> {
+                try {
+                    String filename = path.getFileName().toString();
+                    String mimeType = Files.probeContentType(path);
+                    if (mimeType == null) mimeType = "application/octet-stream";
+                    long size = Files.size(path);
+                    files.add(new OutputFile(filename, mimeType, size, path));
+                } catch (IOException e) {
+                    log.warn("Failed to read output file {}: {}", path, e.getMessage());
+                }
+            });
+        } catch (IOException e) {
+            log.warn("Failed to list output directory: {}", e.getMessage());
+        }
+        return files;
+    }
+
+    public record OutputFile(String filename, String mimeType, long size, Path path) {
+        public InputStream openStream() throws IOException {
+            return Files.newInputStream(path);
+        }
     }
 
     public void destroySandbox(SandboxContext ctx) {

@@ -1,7 +1,10 @@
 package com.agentfactory.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "tasks")
@@ -31,8 +34,10 @@ public class Task {
     @Column(nullable = false)
     private TaskStatus status = TaskStatus.PENDING;
 
-    @Column(columnDefinition = "TEXT")
-    private String result;
+    @JsonIgnore
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC")
+    private List<Artifact> artifacts = new ArrayList<>();
 
     @Column(columnDefinition = "TEXT")
     private String error;
@@ -70,8 +75,8 @@ public class Task {
     public void setSandboxEnabled(boolean sandboxEnabled) { this.sandboxEnabled = sandboxEnabled; }
     public TaskStatus getStatus() { return status; }
     public void setStatus(TaskStatus status) { this.status = status; }
-    public String getResult() { return result; }
-    public void setResult(String result) { this.result = result; }
+    public List<Artifact> getArtifacts() { return artifacts; }
+    public void setArtifacts(List<Artifact> artifacts) { this.artifacts = artifacts; }
     public String getError() { return error; }
     public void setError(String error) { this.error = error; }
     public Instant getStartedAt() { return startedAt; }

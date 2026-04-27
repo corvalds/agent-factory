@@ -15,6 +15,23 @@ services:
       timeout: 3s
       retries: 5
 
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   platform:
     build: ./platform
     ports:
@@ -28,8 +45,15 @@ services:
       AF_API_KEY: dev-api-key-change-me
       AF_ENCRYPTION_KEY: "01234567890123456789012345678901"
       AGENT_SERVICE_URL: http://agent-service:8000
+      AF_STORAGE_ENDPOINT: http://minio:9000
+      AF_STORAGE_ACCESS_KEY: minioadmin
+      AF_STORAGE_SECRET_KEY: minioadmin
+      AF_STORAGE_BUCKET: agent-factory-artifacts
+      AF_STORAGE_REGION: us-east-1
     depends_on:
       postgres:
+        condition: service_healthy
+      minio:
         condition: service_healthy
 
   agent-service:
@@ -52,3 +76,4 @@ services:
 
 volumes:
   pgdata:
+  minio-data:

@@ -3,6 +3,7 @@ package com.agentfactory.service;
 import com.agentfactory.dto.ExecuteRequest;
 import com.agentfactory.dto.ExecuteResponse;
 import com.agentfactory.model.AgentType;
+import com.agentfactory.model.ArtifactType;
 import com.agentfactory.model.Task;
 import com.agentfactory.model.TaskStatus;
 import com.agentfactory.repository.AgentTypeRepository;
@@ -33,6 +34,8 @@ public class TaskExecutionService {
     private final ProviderService providerService;
     private final SseEmitterService sseEmitterService;
     private final SandboxService sandboxService;
+    private final ArtifactService artifactService;
+    private final StorageService storageService;
 
     public TaskExecutionService(TaskRepository taskRepository,
                                  AgentTypeRepository agentTypeRepository,
@@ -41,7 +44,9 @@ public class TaskExecutionService {
                                  CostCalculationService costService,
                                  ProviderService providerService,
                                  SseEmitterService sseEmitterService,
-                                 SandboxService sandboxService) {
+                                 SandboxService sandboxService,
+                                 ArtifactService artifactService,
+                                 StorageService storageService) {
         this.taskRepository = taskRepository;
         this.agentTypeRepository = agentTypeRepository;
         this.agentClient = agentClient;
@@ -50,6 +55,8 @@ public class TaskExecutionService {
         this.providerService = providerService;
         this.sseEmitterService = sseEmitterService;
         this.sandboxService = sandboxService;
+        this.artifactService = artifactService;
+        this.storageService = storageService;
     }
 
     public Task executeTask(Long taskId) {
@@ -58,6 +65,10 @@ public class TaskExecutionService {
 
         if (task.getStatus() != TaskStatus.PENDING) {
             throw new IllegalStateException("Task is not in PENDING status: " + task.getStatus());
+        }
+
+        if (!storageService.isHealthy()) {
+            throw new IllegalStateException("Storage service (MinIO/S3) is not available. Start MinIO before executing tasks.");
         }
 
         task.setStatus(TaskStatus.RUNNING);
@@ -90,7 +101,9 @@ public class TaskExecutionService {
 
             if ("completed".equals(response.status())) {
                 task.setStatus(TaskStatus.COMPLETED);
-                task.setResult(response.result());
+                if (response.result() != null && !response.result().isBlank()) {
+                    artifactService.storeText(task, response.result());
+                }
             } else {
                 task.setStatus(TaskStatus.FAILED);
                 task.setError(response.result());
@@ -149,6 +162,15 @@ public class TaskExecutionService {
             ), apiKey);
 
             Map<String, Object> output = sandboxService.pollForOutput(ctx, 300);
+
+            for (var file : sandboxService.extractOutputFiles(ctx)) {
+                try (var is = file.openStream()) {
+                    artifactService.storeFromStream(task, file.filename(), file.mimeType(),
+                            file.size(), is, ArtifactType.SUPPLEMENTARY);
+                } catch (Exception e) {
+                    log.warn("Failed to store sandbox artifact {}: {}", file.filename(), e.getMessage());
+                }
+            }
 
             String result = (String) output.getOrDefault("result", "");
             String status = (String) output.getOrDefault("status", "failed");

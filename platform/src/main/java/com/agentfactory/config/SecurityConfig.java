@@ -48,8 +48,9 @@ public class SecurityConfig {
                 return;
             }
 
-            // SSE endpoints: allow API key via query param (EventSource can't send headers)
-            if (request.getRequestURI().endsWith("/stream")) {
+            // SSE and artifact endpoints: allow API key via query param (EventSource/links can't send headers)
+            String uri = request.getRequestURI();
+            if (uri.endsWith("/stream") || uri.matches(".*/api/artifacts/[^/]+/content") || uri.matches(".*/api/tasks/\\d+/artifacts/download")) {
                 String token = request.getParameter("token");
                 if (token != null && token.equals(expectedKey)) {
                     chain.doFilter(req, res);

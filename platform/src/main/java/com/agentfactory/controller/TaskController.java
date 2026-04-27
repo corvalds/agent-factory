@@ -1,8 +1,11 @@
 package com.agentfactory.controller;
 
 import com.agentfactory.model.Task;
+import com.agentfactory.model.Artifact;
+import com.agentfactory.model.ArtifactType;
 import com.agentfactory.model.TaskEvent;
 import com.agentfactory.model.TaskStatus;
+import com.agentfactory.service.ArtifactService;
 import com.agentfactory.service.CostCalculationService;
 import com.agentfactory.service.TaskEventService;
 import com.agentfactory.service.TaskExecutionService;
@@ -10,7 +13,9 @@ import com.agentfactory.service.TaskService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.InputStream;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -22,15 +27,18 @@ public class TaskController {
     private final TaskExecutionService executionService;
     private final TaskEventService eventService;
     private final CostCalculationService costService;
+    private final ArtifactService artifactService;
 
     public TaskController(TaskService taskService,
                           TaskExecutionService executionService,
                           TaskEventService eventService,
-                          CostCalculationService costService) {
+                          CostCalculationService costService,
+                          ArtifactService artifactService) {
         this.taskService = taskService;
         this.executionService = executionService;
         this.eventService = eventService;
         this.costService = costService;
+        this.artifactService = artifactService;
     }
 
     @GetMapping
@@ -94,8 +102,21 @@ public class TaskController {
             @PathVariable Long id,
             @RequestParam(defaultValue = "markdown") String format) {
         Task task = taskService.findById(id);
-        if (task.getResult() == null) {
+        List<Artifact> artifacts = artifactService.listByTask(id);
+        Artifact primary = artifacts.stream()
+                .filter(a -> a.getArtifactType() == ArtifactType.PRIMARY)
+                .findFirst()
+                .orElse(null);
+
+        if (primary == null) {
             throw new IllegalStateException("Task has no result to export");
+        }
+
+        String resultText;
+        try (InputStream is = artifactService.getContent(primary.getId())) {
+            resultText = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to read artifact content", e);
         }
 
         String content;
@@ -107,7 +128,7 @@ public class TaskController {
                 content = "{\"id\":" + task.getId()
                     + ",\"name\":\"" + escapeJson(task.getName()) + "\""
                     + ",\"status\":\"" + task.getStatus() + "\""
-                    + ",\"result\":\"" + escapeJson(task.getResult()) + "\""
+                    + ",\"result\":\"" + escapeJson(resultText) + "\""
                     + ",\"agentType\":\"" + task.getAgentType() + "\""
                     + ",\"modelId\":\"" + (task.getModelId() != null ? task.getModelId() : "") + "\""
                     + "}";
@@ -115,7 +136,7 @@ public class TaskController {
                 filename = "task-" + id + "-result.json";
             }
             case "text" -> {
-                content = task.getResult();
+                content = resultText;
                 contentType = "text/plain";
                 filename = "task-" + id + "-result.txt";
             }
@@ -123,7 +144,7 @@ public class TaskController {
                 content = "# " + task.getName() + "\n\n"
                     + "**Status:** " + task.getStatus() + "\n"
                     + "**Agent:** " + task.getAgentType() + " / " + (task.getModelId() != null ? task.getModelId() : "—") + "\n\n"
-                    + "## Result\n\n" + task.getResult();
+                    + "## Result\n\n" + resultText;
                 contentType = "text/markdown";
                 filename = "task-" + id + "-result.md";
             }

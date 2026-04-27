@@ -28,10 +28,19 @@ export interface Task {
   modelId?: string;
   sandboxEnabled: boolean;
   status: "PENDING" | "ANALYZING" | "RUNNING" | "COMPLETED" | "FAILED";
-  result?: string;
   error?: string;
   startedAt?: string;
   completedAt?: string;
+  createdAt: string;
+}
+
+export interface Artifact {
+  id: string;
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
+  artifactType: "PRIMARY" | "SUPPLEMENTARY";
+  sortOrder: number;
   createdAt: string;
 }
 
@@ -85,6 +94,15 @@ export const api = {
     execute: (id: number) => request<Task>(`/api/tasks/${id}/execute`, { method: "POST" }),
     events: (id: number) => request<TaskEvent[]>(`/api/tasks/${id}/events`),
     costEstimate: (id: number) => request<CostEstimate>(`/api/tasks/${id}/cost-estimate`),
+  },
+  artifacts: {
+    list: (taskId: number) => request<Artifact[]>(`/api/tasks/${taskId}/artifacts`),
+    contentUrl: (artifactId: string) =>
+      `${API_BASE}/api/artifacts/${artifactId}/content?token=${encodeURIComponent(API_KEY)}`,
+    downloadAllUrl: (taskId: number) =>
+      `${API_BASE}/api/tasks/${taskId}/artifacts/download?token=${encodeURIComponent(API_KEY)}`,
+    delete: (artifactId: string) =>
+      request<void>(`/api/artifacts/${artifactId}`, { method: "DELETE" }),
   },
   define: {
     start: () => request<{ sessionId: string; expiresAt: string; message: string }>("/api/tasks/define/start", { method: "POST" }),

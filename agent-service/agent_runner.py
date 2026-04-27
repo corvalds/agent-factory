@@ -1,6 +1,9 @@
 import asyncio
+import os
 import time
 import litellm
+
+OUTPUT_DIR = "/workspace/output"
 
 TOOLS_BY_AGENT = {
     "web-scraper": [
@@ -31,6 +34,21 @@ TOOLS_BY_AGENT = {
                 },
             },
         },
+        {
+            "type": "function",
+            "function": {
+                "name": "save_file",
+                "description": "Save content to a file in the output directory. Use this to produce file artifacts (CSV, HTML, images, etc.)",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "filename": {"type": "string", "description": "Filename to save as (e.g. data.csv, page.html)"},
+                        "content": {"type": "string", "description": "File content to write"},
+                    },
+                    "required": ["filename", "content"],
+                },
+            },
+        },
     ],
     "code-analyst": [
         {
@@ -57,6 +75,21 @@ TOOLS_BY_AGENT = {
                         "pattern": {"type": "string", "description": "Glob pattern", "default": "*"},
                     },
                     "required": ["directory"],
+                },
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "save_file",
+                "description": "Save content to a file in the output directory. Use this to produce file artifacts (reports, diffs, etc.)",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "filename": {"type": "string", "description": "Filename to save as"},
+                        "content": {"type": "string", "description": "File content to write"},
+                    },
+                    "required": ["filename", "content"],
                 },
             },
         },
@@ -95,6 +128,16 @@ async def _execute_tool(name: str, args: dict) -> str:
         pattern = args.get("pattern", "*")
         matches = g.glob(f"{args['directory']}/{pattern}", recursive=True)
         return "\n".join(matches[:200])
+
+    elif name == "save_file":
+        try:
+            os.makedirs(OUTPUT_DIR, exist_ok=True)
+            filepath = os.path.join(OUTPUT_DIR, os.path.basename(args["filename"]))
+            with open(filepath, "w") as f:
+                f.write(args["content"])
+            return f"Saved to {filepath}"
+        except Exception as e:
+            return f"Error saving file: {e}"
 
     return f"Unknown tool: {name}"
 
@@ -136,6 +179,7 @@ class AgentRunner:
             "THINK: Plan your next action.\n"
             "ACT: Execute the action (use tools if available).\n"
             "CHECK: Verify if the acceptance criteria are met.\n\n"
+            "To produce file artifacts (CSV, HTML, images, reports), use the save_file tool.\n"
             "When the task is complete, output TASK_COMPLETE followed by the final result."
         )
 

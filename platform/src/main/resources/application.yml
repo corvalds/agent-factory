@@ -15,6 +15,10 @@ spring:
   jackson:
     serialization:
       write-dates-as-timestamps: false
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 
 server:
   port: 8080
@@ -28,6 +32,12 @@ af:
     cpu-limit: ${SANDBOX_CPU:1}
     memory-limit-mb: ${SANDBOX_MEMORY:512}
     timeout-seconds: ${SANDBOX_TIMEOUT:300}
+  storage:
+    endpoint: ${AF_STORAGE_ENDPOINT:http://localhost:9000}
+    access-key: ${AF_STORAGE_ACCESS_KEY:minioadmin}
+    secret-key: ${AF_STORAGE_SECRET_KEY:minioadmin}
+    bucket: ${AF_STORAGE_BUCKET:agent-factory-artifacts}
+    region: ${AF_STORAGE_REGION:us-east-1}
   pricing:
     gpt-4o: "0.0000025"
     gpt-4o-mini: "0.00000015"
