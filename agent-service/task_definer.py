@@ -3,7 +3,7 @@ import logging
 import re
 
 from hermes_bridge import run_hermes
-from project_registry import get_all_projects
+from project_registry import search_projects
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class TaskDefiner:
     )
 
     async def process(self, message: str, conversation: list[dict], model: str, api_key: str = None, base_url: str = None) -> dict:
-        system_prompt = await self._build_system_prompt()
+        system_prompt = await self._build_system_prompt(message, conversation)
         user_message = self._build_context_message(conversation, message)
 
         try:
@@ -72,17 +72,42 @@ class TaskDefiner:
                 "is_complete": False,
             }
 
-    async def _build_system_prompt(self) -> str:
-        projects = await get_all_projects()
-        if projects:
+    async def _build_system_prompt(self, message: str, conversation: list[dict]) -> str:
+        keywords = self._extract_keywords(message, conversation)
+        matched_projects = []
+        for kw in keywords:
+            results = await search_projects(kw)
+            for p in results:
+                if p not in matched_projects:
+                    matched_projects.append(p)
+
+        if matched_projects:
             project_list = "\n".join(
-                f"- {p['name']}: repo={p['repoUrl']}, default_branch={p.get('defaultBranch', 'master')}, keywords={p.get('keywords', '')}"
-                for p in projects
+                f"- {p['name']}: repo={p['repoUrl']}, default_branch={p.get('defaultBranch', 'master')}"
+                for p in matched_projects[:10]
             )
-            registry_section = f"\n\nKnown projects (DO NOT ask about these):\n{project_list}"
+            registry_section = f"\n\nMatched known projects (DO NOT ask about repo URL or branch for these):\n{project_list}"
         else:
-            registry_section = ""
+            registry_section = "\n\nNo known projects matched the user's message. If the task requires code changes, ask the user for the repo URL and branch."
         return self.SYSTEM_PROMPT_BASE + registry_section
+
+    @staticmethod
+    def _extract_keywords(message: str, conversation: list[dict]) -> list[str]:
+        """从用户消息中提取可能的项目名/服务名关键词"""
+        text = message
+        for msg in (conversation or []):
+            if msg.get("role") == "user":
+                text += " " + msg.get("content", "")
+
+        keywords = []
+        # 匹配常见项目命名模式: xxx-center, xxx-service, xxx-sdk, xxx-api 等
+        pattern = r'[a-zA-Z][a-zA-Z0-9_-]*(?:-(?:center|service|sdk|api|job|base|app|portal|agent))?'
+        candidates = re.findall(pattern, text)
+        for c in candidates:
+            if len(c) >= 3 and c.lower() not in ('the', 'and', 'for', 'are', 'this', 'that', 'with', 'from', 'have', 'has', 'not', 'but', 'can', 'will'):
+                if c not in keywords:
+                    keywords.append(c)
+        return keywords[:5]
 
     def _build_context_message(self, conversation: list[dict], current_message: str) -> str:
         """将历史对话和当前消息合并为单个 user message 供 Hermes 处理"""
