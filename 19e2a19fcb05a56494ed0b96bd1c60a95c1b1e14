@@ -1,0 +1,38 @@
+agent-service/task_definer.py
+  fb50a71c9d46f478 30
+agent-service/hermes_bridge.py
+  fb50a71c9d46f478 20,30,37-38,47,54,60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.16",
+  "base_commit_sha": "19e2a19fcb05a56494ed0b96bd1c60a95c1b1e14",
+  "prompts": {
+    "175a45e7d7880527": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4232e82c-a15c-440b-8280-7834649a4782",
+        "model": "claude-opus-4.6"
+      },
+      "human_author": "corvalds <corvalds@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 2190,
+      "overriden_lines": 0
+    },
+    "fb50a71c9d46f478": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d434da4-296b-49de-b6e3-4bb803b94683",
+        "model": "claude-opus-4.6"
+      },
+      "human_author": "corvalds <corvalds@gmail.com>",
+      "messages": [],
+      "total_additions": 8,
+      "total_deletions": 4,
+      "accepted_lines": 8,
+      "overriden_lines": 0
+    }
+  }
+}
