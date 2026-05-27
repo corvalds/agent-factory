@@ -1,0 +1,97 @@
+platform/src/main/java/com/agentfactory/service/TaskEventService.java
+  1639c792f35d182f 3,8,21,25-26,30,89
+platform/src/main/java/com/agentfactory/event/TaskEventPublished.java
+  1639c792f35d182f 1-18
+platform/src/main/java/com/agentfactory/repository/FeishuSessionRepository.java
+  1639c792f35d182f 1-11
+platform/src/main/java/com/agentfactory/AgentFactoryApp.java
+  1639c792f35d182f 5,7
+platform/src/main/java/com/agentfactory/model/FeishuSessionState.java
+  1639c792f35d182f 1-8
+platform/src/main/java/com/agentfactory/service/FeishuMessageService.java
+  1639c792f35d182f 1-51
+platform/src/main/java/com/agentfactory/model/FeishuSession.java
+  1639c792f35d182f 1-55
+platform/src/main/java/com/agentfactory/config/FeishuConfig.java
+  1639c792f35d182f 1-68
+platform/src/main/java/com/agentfactory/service/FeishuNotificationListener.java
+  1639c792f35d182f 1-111
+platform/build.gradle
+  1639c792f35d182f 29
+platform/src/main/resources/application.yml
+  1639c792f35d182f 41-44
+platform/src/main/java/com/agentfactory/service/FeishuBotService.java
+  1639c792f35d182f 1-202
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.16",
+  "base_commit_sha": "f56192dfbaa8ca57f1a9b92828ebae1d432020dc",
+  "prompts": {
+    "0b4152c76b5dcdb4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e69538df-050b-4a0e-b886-1771d26f8a5f",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "corvalds",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 1405,
+      "overriden_lines": 0
+    },
+    "1639c792f35d182f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4d1fbbfe-90e9-41ac-a12a-2565362a335c",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "corvalds <corvalds@gmail.com>",
+      "messages": [],
+      "total_additions": 888,
+      "total_deletions": 108,
+      "accepted_lines": 540,
+      "overriden_lines": 0
+    },
+    "19cc8e25eaacd4c6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4cb848fe-0a14-4292-a1f9-482c0841fdc7",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "corvalds",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 153,
+      "overriden_lines": 0
+    },
+    "3c8d66108d425dc7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1487992c-e1d9-4a7b-91f8-febb1a3dfb5e",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "corvalds <corvalds@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 274,
+      "overriden_lines": 0
+    },
+    "8a35afa015e876ae": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1b121c26-932f-4c24-bfad-86768e4c3e37",
+        "model": "<synthetic>"
+      },
+      "human_author": "corvalds",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 26,
+      "overriden_lines": 0
+    }
+  }
+}
