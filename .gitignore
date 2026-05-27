@@ -37,3 +37,4 @@ docker-compose.override.yml
 *.key
 credentials.json
 .gstack/
+.claude/worktrees

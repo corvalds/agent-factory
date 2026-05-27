@@ -38,6 +38,10 @@ af:
     secret-key: ${AF_STORAGE_SECRET_KEY:minioadmin}
     bucket: ${AF_STORAGE_BUCKET:agent-factory-artifacts}
     region: ${AF_STORAGE_REGION:us-east-1}
+  feishu:
+    app-id: ${FEISHU_APP_ID:}
+    app-secret: ${FEISHU_APP_SECRET:}
+    default-agent-type: general-purpose
   pricing:
     gpt-4o: "0.0000025"
     gpt-4o-mini: "0.00000015"

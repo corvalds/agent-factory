@@ -26,6 +26,7 @@ dependencies {
     implementation 'com.github.docker-java:docker-java-transport-httpclient5:3.4.1'
     implementation platform('software.amazon.awssdk:bom:2.31.1')
     implementation 'software.amazon.awssdk:s3'
+    implementation 'com.larksuite.oapi:oapi-sdk:2.7.1'
     runtimeOnly 'org.postgresql:postgresql'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

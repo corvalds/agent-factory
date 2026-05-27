@@ -1,9 +1,11 @@
 package com.agentfactory.service;
 
+import com.agentfactory.event.TaskEventPublished;
 import com.agentfactory.model.EventType;
 import com.agentfactory.model.TaskEvent;
 import com.agentfactory.repository.TaskEventRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -16,13 +18,16 @@ public class TaskEventService {
     private final TaskEventRepository eventRepository;
     private final SseEmitterService sseEmitterService;
     private final ObjectMapper objectMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     public TaskEventService(TaskEventRepository eventRepository,
                             SseEmitterService sseEmitterService,
-                            ObjectMapper objectMapper) {
+                            ObjectMapper objectMapper,
+                            ApplicationEventPublisher eventPublisher) {
         this.eventRepository = eventRepository;
         this.sseEmitterService = sseEmitterService;
         this.objectMapper = objectMapper;
+        this.eventPublisher = eventPublisher;
     }
 
     public List<TaskEvent> getEvents(Long taskId) {
@@ -81,6 +86,7 @@ public class TaskEventService {
         }
         TaskEvent saved = eventRepository.save(event);
         sseEmitterService.emit(taskId, saved);
+        eventPublisher.publishEvent(new TaskEventPublished(this, saved));
         return saved;
     }
 }
