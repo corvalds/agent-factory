@@ -27,7 +27,14 @@ def resolve_model(model: str) -> str:
     return f"openai/{model}"
 
 
-def _run_sync(model: str, api_key: str, base_url: str, system_message: str, user_message: str, max_iterations: int) -> dict:
+def resolve_api_mode(model: str) -> str:
+    """根据 model 名推断 Hermes 的 api_mode"""
+    if "claude" in model or model.startswith("anthropic/"):
+        return "anthropic_messages"
+    return "chat_completions"
+
+
+def _run_sync(model: str, api_key: str, base_url: str, api_mode: str, system_message: str, user_message: str, max_iterations: int) -> dict:
     """同步调用 Hermes AIAgent"""
     from run_agent import AIAgent
 
@@ -36,6 +43,8 @@ def _run_sync(model: str, api_key: str, base_url: str, system_message: str, user
         agent_kwargs["api_key"] = api_key
     if base_url:
         agent_kwargs["base_url"] = base_url
+    if api_mode:
+        agent_kwargs["api_mode"] = api_mode
 
     agent = AIAgent(**agent_kwargs)
     return agent.run_conversation(
@@ -44,13 +53,14 @@ def _run_sync(model: str, api_key: str, base_url: str, system_message: str, user
     )
 
 
-async def run_hermes(model: str, api_key: str, system_message: str, user_message: str, max_iterations: int = 30, base_url: str = None) -> dict:
+async def run_hermes(model: str, api_key: str, system_message: str, user_message: str, max_iterations: int = 30, base_url: str = None, api_mode: str = None) -> dict:
     """
     统一的 Hermes 异步调用入口。
 
     返回 Hermes 的 result dict，包含 final_response 等字段。
     """
     hermes_model = resolve_model(model)
+    effective_api_mode = api_mode or resolve_api_mode(hermes_model)
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(
         _executor,
@@ -58,6 +68,7 @@ async def run_hermes(model: str, api_key: str, system_message: str, user_message
         hermes_model,
         api_key,
         base_url or "",
+        effective_api_mode,
         system_message,
         user_message,
         max_iterations,
