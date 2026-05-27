@@ -34,7 +34,7 @@ def resolve_api_mode(model: str) -> str:
     return "chat_completions"
 
 
-def _run_sync(model: str, api_key: str, base_url: str, api_mode: str, system_message: str, user_message: str, max_iterations: int) -> dict:
+def _run_sync(model: str, api_key: str, base_url: str, api_mode: str, system_message: str, user_message: str, max_iterations: int, disable_tools: bool = False) -> dict:
     """同步调用 Hermes AIAgent"""
     from run_agent import AIAgent
 
@@ -45,6 +45,8 @@ def _run_sync(model: str, api_key: str, base_url: str, api_mode: str, system_mes
         agent_kwargs["base_url"] = base_url
     if api_mode:
         agent_kwargs["api_mode"] = api_mode
+    if disable_tools:
+        agent_kwargs["enabled_toolsets"] = []
 
     agent = AIAgent(**agent_kwargs)
     return agent.run_conversation(
@@ -53,7 +55,7 @@ def _run_sync(model: str, api_key: str, base_url: str, api_mode: str, system_mes
     )
 
 
-async def run_hermes(model: str, api_key: str, system_message: str, user_message: str, max_iterations: int = 30, base_url: str = None, api_mode: str = None) -> dict:
+async def run_hermes(model: str, api_key: str, system_message: str, user_message: str, max_iterations: int = 30, base_url: str = None, api_mode: str = None, disable_tools: bool = False) -> dict:
     """
     统一的 Hermes 异步调用入口。
 
@@ -64,12 +66,8 @@ async def run_hermes(model: str, api_key: str, system_message: str, user_message
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(
         _executor,
-        _run_sync,
-        hermes_model,
-        api_key,
-        base_url or "",
-        effective_api_mode,
-        system_message,
-        user_message,
-        max_iterations,
+        lambda: _run_sync(
+            hermes_model, api_key, base_url or "", effective_api_mode,
+            system_message, user_message, max_iterations, disable_tools,
+        ),
     )
