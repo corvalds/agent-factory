@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 
 @Service
@@ -33,6 +35,8 @@ public class FeishuBotService {
                     return size() > DEDUP_CACHE_SIZE;
                 }
             });
+
+    private final ExecutorService asyncExecutor = Executors.newVirtualThreadPerTaskExecutor();
 
 
     private final FeishuSessionRepository sessionRepository;
@@ -138,45 +142,56 @@ public class FeishuBotService {
     }
 
     private void processDefineMessage(FeishuSession session, String text, String replyTo, String replyType) {
-        try {
-            DefineResponse response = taskDefinitionService.processMessage(session.getSessionId(), text, llmModel, llmApiKey, llmBaseUrl);
+        Long sessionDbId = session.getId();
+        String sessionId = session.getSessionId();
+        String openId = session.getOpenId();
+        messageService.sendText(replyTo, replyType, "思考中...");
 
-            if (response.isComplete()) {
-                session.setState(FeishuSessionState.CONFIRMING);
-                sessionRepository.save(session);
-                String summary = buildTaskSummary(response);
-                messageService.sendText(replyTo, replyType,
-                        summary + "\n\n回复「确认」开始执行，回复「取消」放弃。");
-            } else {
-                messageService.sendText(replyTo, replyType, response.reply());
-            }
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage() != null && e.getMessage().contains("Session not found")) {
-                log.info("Conversation session lost for {}, recreating", session.getOpenId());
-                var convSession = taskDefinitionService.startConversation();
-                session.setSessionId(convSession.getId());
-                sessionRepository.save(session);
-                processDefineMessage(session, text, replyTo, replyType);
-            } else {
-                log.error("Error in task definition for {}: {}", session.getOpenId(), e.getMessage(), e);
-                resetSession(session);
+        asyncExecutor.submit(() -> {
+            try {
+                DefineResponse response = taskDefinitionService.processMessage(sessionId, text, llmModel, llmApiKey, llmBaseUrl);
+
+                if (response.isComplete()) {
+                    FeishuSession s = sessionRepository.findById(sessionDbId).orElse(null);
+                    if (s == null) return;
+                    s.setState(FeishuSessionState.CONFIRMING);
+                    sessionRepository.save(s);
+                    String summary = buildTaskSummary(response);
+                    messageService.sendText(replyTo, replyType,
+                            summary + "\n\n回复「确认」开始执行，回复「取消」放弃。");
+                } else {
+                    messageService.sendText(replyTo, replyType, response.reply());
+                }
+            } catch (IllegalArgumentException e) {
+                if (e.getMessage() != null && e.getMessage().contains("Session not found")) {
+                    log.info("Conversation session lost for {}, recreating", openId);
+                    FeishuSession s = sessionRepository.findById(sessionDbId).orElse(null);
+                    if (s == null) return;
+                    var convSession = taskDefinitionService.startConversation();
+                    s.setSessionId(convSession.getId());
+                    sessionRepository.save(s);
+                    processDefineMessage(s, text, replyTo, replyType);
+                } else {
+                    log.error("Error in task definition for {}: {}", openId, e.getMessage(), e);
+                    sessionRepository.findById(sessionDbId).ifPresent(this::resetSession);
+                    messageService.sendText(replyTo, replyType, "处理出错，请重新发送消息开始。");
+                }
+            } catch (IllegalStateException e) {
+                if (e.getMessage() != null && e.getMessage().contains("expired")) {
+                    log.info("Session expired for {}, resetting", openId);
+                    sessionRepository.findById(sessionDbId).ifPresent(this::resetSession);
+                    messageService.sendText(replyTo, replyType, "会话已过期，请重新发送消息开始新任务。");
+                } else {
+                    log.error("Error in task definition for {}: {}", openId, e.getMessage(), e);
+                    sessionRepository.findById(sessionDbId).ifPresent(this::resetSession);
+                    messageService.sendText(replyTo, replyType, "处理出错，请重新发送消息开始。");
+                }
+            } catch (Exception e) {
+                log.error("Error in task definition for {}: {}", openId, e.getMessage(), e);
+                sessionRepository.findById(sessionDbId).ifPresent(this::resetSession);
                 messageService.sendText(replyTo, replyType, "处理出错，请重新发送消息开始。");
             }
-        } catch (IllegalStateException e) {
-            if (e.getMessage() != null && e.getMessage().contains("expired")) {
-                log.info("Session expired for {}, resetting", session.getOpenId());
-                resetSession(session);
-                messageService.sendText(replyTo, replyType, "会话已过期，请重新发送消息开始新任务。");
-            } else {
-                log.error("Error in task definition for {}: {}", session.getOpenId(), e.getMessage(), e);
-                resetSession(session);
-                messageService.sendText(replyTo, replyType, "处理出错，请重新发送消息开始。");
-            }
-        } catch (Exception e) {
-            log.error("Error in task definition for {}: {}", session.getOpenId(), e.getMessage(), e);
-            resetSession(session);
-            messageService.sendText(replyTo, replyType, "处理出错，请重新发送消息开始。");
-        }
+        });
     }
 
     private void handleConfirming(FeishuSession session, String text, String replyTo, String replyType) {
