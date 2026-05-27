@@ -1,0 +1,27 @@
+platform/src/main/java/com/agentfactory/service/FeishuBotService.java
+  fb50a71c9d46f478 34-42,122,154
+platform/src/main/java/com/agentfactory/service/TaskDefinitionService.java
+  fb50a71c9d46f478 36-39,52-61,67-68
+platform/src/main/resources/application.yml
+  fb50a71c9d46f478 45-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.16",
+  "base_commit_sha": "dd501f2572784bf0d00a57f7e3961725e0919a1b",
+  "prompts": {
+    "fb50a71c9d46f478": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d434da4-296b-49de-b6e3-4bb803b94683",
+        "model": "claude-opus-4.6"
+      },
+      "human_author": "corvalds <corvalds@gmail.com>",
+      "messages": [],
+      "total_additions": 422,
+      "total_deletions": 397,
+      "accepted_lines": 30,
+      "overriden_lines": 0
+    }
+  }
+}
