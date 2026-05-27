@@ -74,6 +74,12 @@ public class TaskEventService {
         ));
     }
 
+    public TaskEvent recordClarificationEvent(Long taskId, String message) {
+        return record(taskId, EventType.CLARIFICATION, null, Map.of(
+            "message", message != null ? message : ""
+        ));
+    }
+
     private TaskEvent record(Long taskId, EventType type, Integer durationMs, Map<String, Object> data) {
         TaskEvent event = new TaskEvent();
         event.setTaskId(taskId);

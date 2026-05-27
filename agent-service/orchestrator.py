@@ -5,6 +5,7 @@ import time
 
 from hermes_bridge import run_hermes
 from coding_executor import CodingExecutor
+from project_registry import get_all_projects
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +55,16 @@ class TaskOrchestrator:
             "duration_ms": analysis.get("duration_ms", 0),
         })
 
+        if analysis.get("unknown_project"):
+            hint = analysis.get("project_hint", "")
+            return {
+                "result": None,
+                "status": "needs_clarification",
+                "clarification": f"无法识别项目「{hint}」，请提供仓库地址或进一步说明是哪个项目。",
+                "steps": steps,
+                "total_tokens": sum(s.get("tokens_in", 0) + s.get("tokens_out", 0) for s in steps),
+            }
+
         if analysis.get("intent") == "coding" and analysis.get("repos"):
             extra_from_analysis = {
                 "repo_url": analysis["repos"][0]["url"],
@@ -63,21 +74,41 @@ class TaskOrchestrator:
                 return await self._execute_multi_repo(request, analysis["repos"], steps)
             return await self._execute_coding_task(request, extra_from_analysis, steps)
 
+        if analysis.get("intent") == "coding" and not analysis.get("repos"):
+            return {
+                "result": None,
+                "status": "needs_clarification",
+                "clarification": "检测到这是一个需要修改代码的任务，但无法确定目标仓库。请提供项目名称或仓库地址。",
+                "steps": steps,
+                "total_tokens": sum(s.get("tokens_in", 0) + s.get("tokens_out", 0) for s in steps),
+            }
+
         # 非 coding 任务：Hermes Agent 直接执行
         return await self._execute_with_hermes(request, steps)
 
     async def _analyze_intent(self, request) -> dict:
-        """用 Hermes Agent 分析用户意图，提取仓库信息"""
+        """用 Hermes Agent 分析用户意图，结合项目注册表匹配仓库"""
         start = time.time()
 
-        system_prompt = """You are a task analyzer. Given a user's request, determine:
+        projects = await get_all_projects()
+        if projects:
+            project_list = "\n".join(
+                f"- {p['name']}: {p['repoUrl']} (branch: {p.get('defaultBranch', 'master')}, keywords: {p.get('keywords', '')})"
+                for p in projects
+            )
+            registry_section = f"\n\nKnown projects in the organization:\n{project_list}\n"
+        else:
+            registry_section = ""
+
+        system_prompt = f"""You are a task analyzer. Given a user's request, determine:
 1. Whether it requires code modifications (intent: "coding") or can be answered directly (intent: "simple")
-2. If coding: extract repository URLs and branches mentioned
-
+2. If coding: match mentioned project names, service names, or contextual clues to known projects below. Use keyword matching (service names from traces, package names from stack traces, project aliases).
+3. If the user mentions a project/service that cannot be matched to any known project, set "unknown_project": true and "project_hint" to what they mentioned.
+{registry_section}
 You MUST respond with ONLY a JSON object, no other text:
-{"intent": "coding"|"simple", "repos": [{"url": "...", "branch": "..."}], "reasoning": "..."}
+{{"intent": "coding"|"simple", "repos": [{{"url": "...", "branch": "..."}}], "reasoning": "...", "unknown_project": false, "project_hint": ""}}
 
-If no specific repo URL is mentioned but the task clearly needs code changes, set intent to "coding" with repos as empty list.
+If no specific repo URL is mentioned and no known project matches, but the task clearly needs code changes, set intent to "coding" with repos as empty list and unknown_project to true.
 """
         user_msg = f"Background: {request.background}\nGoal: {request.goal}"
 
@@ -218,13 +249,30 @@ If no specific repo URL is mentioned but the task clearly needs code changes, se
         }
 
     async def _execute_with_hermes(self, request, steps: list) -> dict:
-        """非 coding 任务：使用 Hermes Agent 直接执行"""
+        """非 coding 任务：使用 Hermes Agent 直接执行，注入项目注册表供上下文推断"""
         start = time.time()
+
+        projects = await get_all_projects()
+        if projects:
+            project_list = "\n".join(
+                f"- {p['name']}: {p['repoUrl']} (keywords: {p.get('keywords', '')})"
+                for p in projects
+            )
+            registry_section = (
+                f"\n\nYou have access to the following known projects/services:\n{project_list}\n"
+                "If during your investigation you determine that code changes are needed in one of these projects, "
+                "include the following marker at the END of your response on its own line:\n"
+                "CODING_NEEDED: <project_name>\n"
+                "This will trigger the coding pipeline for that project.\n"
+            )
+        else:
+            registry_section = ""
 
         system_prompt = (
             f"You are a helpful assistant.\n"
             f"Background: {request.background}\n"
-            f"Acceptance criteria: {request.acceptance_criteria}\n\n"
+            f"Acceptance criteria: {request.acceptance_criteria}\n"
+            f"{registry_section}\n"
             "Complete the user's goal thoroughly."
         )
 
@@ -247,6 +295,15 @@ If no specific repo URL is mentioned but the task clearly needs code changes, se
                 "duration_ms": duration,
             })
 
+            coding_project = self._extract_coding_needed(content, projects)
+            if coding_project:
+                logger.info("Hermes identified coding needed for project: %s", coding_project["name"])
+                extra = {
+                    "repo_url": coding_project["repoUrl"],
+                    "branch": coding_project.get("defaultBranch", "master"),
+                }
+                return await self._execute_coding_task(request, extra, steps)
+
             return {
                 "result": content,
                 "steps": steps,
@@ -261,3 +318,19 @@ If no specific repo URL is mentioned but the task clearly needs code changes, se
                 "total_tokens": 0,
                 "status": "failed",
             }
+
+    @staticmethod
+    def _extract_coding_needed(content: str, projects: list[dict]) -> dict | None:
+        """从 Hermes 响应中检测 CODING_NEEDED 标记，匹配到已知项目则返回"""
+        import re
+        match = re.search(r"CODING_NEEDED:\s*(.+)", content)
+        if not match:
+            return None
+        hint = match.group(1).strip().lower()
+        for p in projects:
+            if p["name"].lower() == hint:
+                return p
+            keywords = (p.get("keywords") or "").lower().split(",")
+            if hint in [k.strip() for k in keywords]:
+                return p
+        return None

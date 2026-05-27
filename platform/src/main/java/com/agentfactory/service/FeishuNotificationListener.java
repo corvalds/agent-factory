@@ -53,6 +53,7 @@ public class FeishuNotificationListener {
         switch (taskEvent.getEventType()) {
             case COMPLETION -> handleCompletion(session, taskEvent);
             case ERROR -> handleError(session, taskEvent);
+            case CLARIFICATION -> handleClarification(session, taskEvent);
             default -> {}
         }
     }
@@ -91,6 +92,19 @@ public class FeishuNotificationListener {
         session.setState(FeishuSessionState.IDLE);
         session.setTaskId(null);
         session.setSessionId(null);
+        sessionRepository.save(session);
+    }
+
+    private void handleClarification(FeishuSession session, TaskEvent taskEvent) {
+        String message = extractField(taskEvent.getData(), "message");
+        String text = "❓ " + (message != null ? message : "需要更多信息，请补充说明。");
+
+        String chatId = session.getChatId();
+        String replyTo = chatId != null && chatId.startsWith("oc_") ? chatId : session.getOpenId();
+        String replyType = chatId != null && chatId.startsWith("oc_") ? "chat_id" : "open_id";
+        messageService.sendText(replyTo, replyType, text);
+
+        session.setState(FeishuSessionState.DEFINING);
         sessionRepository.save(session);
     }
 

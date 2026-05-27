@@ -9,5 +9,6 @@ public record ExecuteResponse(
     List<Map<String, Object>> steps,
     @JsonProperty("total_tokens") int totalTokens,
     String status,
-    @JsonProperty("mr_url") String mrUrl
+    @JsonProperty("mr_url") String mrUrl,
+    String clarification
 ) {}
