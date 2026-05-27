@@ -31,6 +31,15 @@ public class FeishuBotService {
     @Value("${af.feishu.default-agent-type:general-purpose}")
     private String defaultAgentType;
 
+    @Value("${af.feishu.llm-model:gpt-4o}")
+    private String llmModel;
+
+    @Value("${af.feishu.llm-api-key:}")
+    private String llmApiKey;
+
+    @Value("${af.feishu.llm-base-url:}")
+    private String llmBaseUrl;
+
     public FeishuBotService(FeishuSessionRepository sessionRepository,
                             TaskDefinitionService taskDefinitionService,
                             TaskExecutionService taskExecutionService,
@@ -110,7 +119,7 @@ public class FeishuBotService {
 
     private void processDefineMessage(FeishuSession session, String text, String replyTo, String replyType) {
         try {
-            DefineResponse response = taskDefinitionService.processMessage(session.getSessionId(), text, null);
+            DefineResponse response = taskDefinitionService.processMessage(session.getSessionId(), text, llmModel, llmApiKey, llmBaseUrl);
 
             if (response.isComplete()) {
                 session.setState(FeishuSessionState.CONFIRMING);
@@ -142,7 +151,7 @@ public class FeishuBotService {
         String trimmed = text.trim();
         if ("确认".equals(trimmed) || "是".equals(trimmed) || "yes".equalsIgnoreCase(trimmed) || "confirm".equalsIgnoreCase(trimmed)) {
             try {
-                Task task = taskDefinitionService.confirmDefinition(session.getSessionId(), defaultAgentType, null, false, null, null);
+                Task task = taskDefinitionService.confirmDefinition(session.getSessionId(), defaultAgentType, llmModel, false, null, null);
                 session.setTaskId(task.getId());
                 session.setState(FeishuSessionState.EXECUTING);
                 sessionRepository.save(session);
