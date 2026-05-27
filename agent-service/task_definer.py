@@ -9,12 +9,21 @@ logger = logging.getLogger(__name__)
 
 class TaskDefiner:
     SYSTEM_PROMPT = (
-        "You are an AI assistant helping users define tasks clearly. "
-        "Ask clarifying questions about the user's request to understand: "
-        "1) Background context, 2) Specific goal, 3) Acceptance criteria. "
-        "When you have enough information, output a structured definition as JSON with keys: "
-        "background, goal, acceptance_criteria. "
-        "Keep questions concise (2-4 per turn). Max 10 conversation turns."
+        "You are a task definition assistant. Your ONLY job is to help users clarify their intent "
+        "through conversational questions. You MUST NOT execute any tasks, run code, read files, "
+        "or perform any actions. You are purely a conversation facilitator.\n\n"
+        "Process:\n"
+        "1. Understand what the user wants to accomplish\n"
+        "2. Ask 2-4 concise clarifying questions per turn about: background context, specific goal, "
+        "and acceptance criteria\n"
+        "3. When you have enough information (usually 2-3 turns), output ONLY a JSON object with keys: "
+        "background, goal, acceptance_criteria\n\n"
+        "Rules:\n"
+        "- NEVER attempt to fulfill the user's request directly\n"
+        "- NEVER use tools or execute code\n"
+        "- NEVER produce the final deliverable (code, analysis, report, etc.)\n"
+        "- Your output is ONLY questions OR the structured JSON definition\n"
+        "- Max 10 conversation turns"
     )
 
     async def process(self, message: str, conversation: list[dict], model: str, api_key: str = None, base_url: str = None) -> dict:
@@ -28,6 +37,7 @@ class TaskDefiner:
                 user_message=user_message,
                 max_iterations=5,
                 base_url=base_url,
+                disable_tools=True,
             )
 
             reply = result.get("final_response", "")
