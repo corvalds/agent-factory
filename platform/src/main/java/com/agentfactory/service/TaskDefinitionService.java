@@ -33,6 +33,10 @@ public class TaskDefinitionService {
     }
 
     public DefineResponse processMessage(String sessionId, String message, String model) {
+        return processMessage(sessionId, message, model, null, null);
+    }
+
+    public DefineResponse processMessage(String sessionId, String message, String model, String apiKey, String baseUrl) {
         ConversationSession session = sessionService.get(sessionId);
 
         if (!"active".equals(session.getStatus())) {
@@ -45,14 +49,23 @@ public class TaskDefinitionService {
         boolean forceComplete = session.isAtTurnLimit();
 
         String effectiveModel = model != null ? model : "gpt-4o";
-        var providerInfo = resolveProvider(effectiveModel);
+
+        String effectiveApiKey = apiKey;
+        String effectiveBaseUrl = baseUrl;
+        if (effectiveApiKey == null || effectiveApiKey.isBlank()) {
+            var providerInfo = resolveProvider(effectiveModel);
+            if (providerInfo != null) {
+                effectiveApiKey = providerInfo[0];
+                effectiveBaseUrl = providerInfo[1];
+            }
+        }
 
         DefineRequest request = new DefineRequest(
             forceComplete ? message + "\n\n[SYSTEM: This is the final turn. Output the structured task definition now as JSON with keys: background, goal, acceptance_criteria.]" : message,
             session.getMessages(),
             effectiveModel,
-            providerInfo != null ? providerInfo[0] : null,
-            providerInfo != null ? providerInfo[1] : null
+            effectiveApiKey,
+            effectiveBaseUrl
         );
 
         DefineResponse response = agentClient.define(request);
