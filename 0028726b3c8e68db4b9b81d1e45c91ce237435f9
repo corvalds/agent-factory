@@ -1,0 +1,27 @@
+agent-service/orchestrator.py
+  175a45e7d7880527 6,85-90,232-237
+agent-service/task_definer.py
+  175a45e7d7880527 1-3,5,7,21,24-30,32,40,47-59,61-66,68,77-85
+agent-service/hermes_bridge.py
+  175a45e7d7880527 1-61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.16",
+  "base_commit_sha": "0028726b3c8e68db4b9b81d1e45c91ce237435f9",
+  "prompts": {
+    "175a45e7d7880527": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4232e82c-a15c-440b-8280-7834649a4782",
+        "model": "claude-opus-4.6"
+      },
+      "human_author": "corvalds <corvalds@gmail.com>",
+      "messages": [],
+      "total_additions": 125,
+      "total_deletions": 70,
+      "accepted_lines": 2314,
+      "overriden_lines": 0
+    }
+  }
+}
