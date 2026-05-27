@@ -1,0 +1,23 @@
+CLAUDE.md
+  8a0279fa5972ae20 3-121
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.16",
+  "base_commit_sha": "c849dc72c5ed1dbdbccddf09942fc2dea2ae8ac3",
+  "prompts": {
+    "8a0279fa5972ae20": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "33d28118-971b-46ba-ace8-50d9c0098859",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "corvalds <corvalds@gmail.com>",
+      "messages": [],
+      "total_additions": 121,
+      "total_deletions": 0,
+      "accepted_lines": 119,
+      "overriden_lines": 0
+    }
+  }
+}
