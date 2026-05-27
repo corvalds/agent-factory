@@ -5,3 +5,4 @@ hermes-agent>=0.14.0
 pydantic==2.12.5
 requests==2.33.0
 beautifulsoup4==4.13.4
+httpx==0.28.1

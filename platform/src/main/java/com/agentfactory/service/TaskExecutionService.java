@@ -97,6 +97,15 @@ public class TaskExecutionService {
 
             BigDecimal totalCost = processSteps(task, response);
 
+            if ("needs_clarification".equals(response.status())) {
+                task.setStatus(TaskStatus.PENDING);
+                taskRepository.save(task);
+                eventService.recordClarificationEvent(task.getId(),
+                        response.clarification() != null ? response.clarification() : "Need more info");
+                sseEmitterService.completeAll(task.getId());
+                return;
+            }
+
             if ("completed".equals(response.status())) {
                 task.setStatus(TaskStatus.COMPLETED);
                 if (response.result() != null && !response.result().isBlank()) {
@@ -189,7 +198,7 @@ public class TaskExecutionService {
             int totalTokens = output.get("total_tokens") instanceof Number n ? n.intValue() : 0;
             List<Map<String, Object>> steps = output.get("steps") instanceof List<?> l ? (List<Map<String, Object>>) l : List.of();
 
-            return new ExecuteResponse(result, steps, totalTokens, status, null);
+            return new ExecuteResponse(result, steps, totalTokens, status, null, null);
         } finally {
             sandboxService.destroySandbox(ctx);
         }
