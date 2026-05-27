@@ -13,6 +13,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 @Service
@@ -21,6 +24,16 @@ public class FeishuBotService {
 
     private static final Logger log = LoggerFactory.getLogger(FeishuBotService.class);
     private static final Pattern MENTION_PLACEHOLDER = Pattern.compile("@_user_\\d+\\s*");
+
+    private static final int DEDUP_CACHE_SIZE = 200;
+    private final Map<String, Boolean> processedMessageIds = Collections.synchronizedMap(
+            new LinkedHashMap<>(DEDUP_CACHE_SIZE, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<String, Boolean> eldest) {
+                    return size() > DEDUP_CACHE_SIZE;
+                }
+            });
+
 
     private final FeishuSessionRepository sessionRepository;
     private final TaskDefinitionService taskDefinitionService;
@@ -55,6 +68,13 @@ public class FeishuBotService {
     public void onMessageReceived(P2MessageReceiveV1 event) {
         try {
             var message = event.getEvent().getMessage();
+            String messageId = message.getMessageId();
+
+            if (messageId != null && processedMessageIds.putIfAbsent(messageId, Boolean.TRUE) != null) {
+                log.debug("Duplicate message ignored: {}", messageId);
+                return;
+            }
+
             var sender = event.getEvent().getSender();
             String openId = sender.getSenderId().getOpenId();
             String chatId = message.getChatId();
