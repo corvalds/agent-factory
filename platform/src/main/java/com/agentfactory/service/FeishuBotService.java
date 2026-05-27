@@ -150,6 +150,18 @@ public class FeishuBotService {
             } else {
                 messageService.sendText(replyTo, replyType, response.reply());
             }
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage() != null && e.getMessage().contains("Session not found")) {
+                log.info("Conversation session lost for {}, recreating", session.getOpenId());
+                var convSession = taskDefinitionService.startConversation();
+                session.setSessionId(convSession.getId());
+                sessionRepository.save(session);
+                processDefineMessage(session, text, replyTo, replyType);
+            } else {
+                log.error("Error in task definition for {}: {}", session.getOpenId(), e.getMessage(), e);
+                resetSession(session);
+                messageService.sendText(replyTo, replyType, "处理出错，请重新发送消息开始。");
+            }
         } catch (IllegalStateException e) {
             if (e.getMessage() != null && e.getMessage().contains("expired")) {
                 log.info("Session expired for {}, resetting", session.getOpenId());
