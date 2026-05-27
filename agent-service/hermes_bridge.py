@@ -29,7 +29,7 @@ def resolve_model(model: str) -> str:
 
 def _run_sync(model: str, api_key: str, base_url: str, system_message: str, user_message: str, max_iterations: int) -> dict:
     """同步调用 Hermes AIAgent"""
-    from hermes_agent import AIAgent
+    from run_agent import AIAgent
 
     agent_kwargs = {"model": model, "max_iterations": max_iterations}
     if api_key:
