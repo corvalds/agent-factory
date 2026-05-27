@@ -42,6 +42,13 @@ public class SecurityConfig {
                 return;
             }
 
+            // 内部服务间调用免认证（来自 localhost）
+            String remoteAddr = request.getRemoteAddr();
+            if ("127.0.0.1".equals(remoteAddr) || "0:0:0:0:0:0:0:1".equals(remoteAddr)) {
+                chain.doFilter(req, res);
+                return;
+            }
+
             String auth = request.getHeader("Authorization");
             if (auth != null && auth.startsWith("Bearer ") && auth.substring(7).equals(expectedKey)) {
                 chain.doFilter(req, res);
