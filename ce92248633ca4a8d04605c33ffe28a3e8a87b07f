@@ -1,0 +1,49 @@
+agent-service/requirements.txt
+  fb50a71c9d46f478 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.16",
+  "base_commit_sha": "ce92248633ca4a8d04605c33ffe28a3e8a87b07f",
+  "prompts": {
+    "0b4152c76b5dcdb4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e69538df-050b-4a0e-b886-1771d26f8a5f",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "corvalds",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    },
+    "175a45e7d7880527": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4232e82c-a15c-440b-8280-7834649a4782",
+        "model": "claude-opus-4.6"
+      },
+      "human_author": "corvalds <corvalds@gmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "fb50a71c9d46f478": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d434da4-296b-49de-b6e3-4bb803b94683",
+        "model": "claude-opus-4.6"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
