@@ -1,31 +1,12 @@
 import asyncio
 import json
 import logging
-import os
 import time
-from concurrent.futures import ThreadPoolExecutor
 
+from hermes_bridge import run_hermes
 from coding_executor import CodingExecutor
 
 logger = logging.getLogger(__name__)
-
-_executor = ThreadPoolExecutor(max_workers=4)
-
-
-def _run_hermes_sync(model: str, api_key: str, system_message: str, user_message: str, max_iterations: int = 30) -> dict:
-    """同步调用 Hermes AIAgent（Hermes 核心是同步的）"""
-    from hermes_agent import AIAgent
-
-    agent_kwargs = {"model": model, "max_iterations": max_iterations}
-    if api_key:
-        agent_kwargs["api_key"] = api_key
-
-    agent = AIAgent(**agent_kwargs)
-    result = agent.run_conversation(
-        user_message=user_message,
-        system_message=system_message,
-    )
-    return result
 
 
 class TaskOrchestrator:
@@ -85,17 +66,6 @@ class TaskOrchestrator:
         # 非 coding 任务：Hermes Agent 直接执行
         return await self._execute_with_hermes(request, steps)
 
-    def _resolve_model(self, request) -> str:
-        """将 platform 的 model 名转为 Hermes 的 provider/model 格式"""
-        model = request.model or "gpt-4o"
-        if model.startswith(("openai/", "anthropic/", "deepseek/", "openrouter/")):
-            return model
-        if "claude" in model:
-            return f"anthropic/{model}"
-        if "deepseek" in model:
-            return f"deepseek/{model}"
-        return f"openai/{model}"
-
     async def _analyze_intent(self, request) -> dict:
         """用 Hermes Agent 分析用户意图，提取仓库信息"""
         start = time.time()
@@ -110,18 +80,14 @@ You MUST respond with ONLY a JSON object, no other text:
 If no specific repo URL is mentioned but the task clearly needs code changes, set intent to "coding" with repos as empty list.
 """
         user_msg = f"Background: {request.background}\nGoal: {request.goal}"
-        model = self._resolve_model(request)
 
         try:
-            loop = asyncio.get_event_loop()
-            result = await loop.run_in_executor(
-                _executor,
-                _run_hermes_sync,
-                model,
-                request.api_key,
-                system_prompt,
-                user_msg,
-                5,
+            result = await run_hermes(
+                model=request.model,
+                api_key=request.api_key,
+                system_message=system_prompt,
+                user_message=user_msg,
+                max_iterations=5,
             )
 
             response_text = result.get("final_response", "")
@@ -261,18 +227,14 @@ If no specific repo URL is mentioned but the task clearly needs code changes, se
             f"Acceptance criteria: {request.acceptance_criteria}\n\n"
             "Complete the user's goal thoroughly."
         )
-        model = self._resolve_model(request)
 
         try:
-            loop = asyncio.get_event_loop()
-            result = await loop.run_in_executor(
-                _executor,
-                _run_hermes_sync,
-                model,
-                request.api_key,
-                system_prompt,
-                request.goal,
-                30,
+            result = await run_hermes(
+                model=request.model,
+                api_key=request.api_key,
+                system_message=system_prompt,
+                user_message=request.goal,
+                max_iterations=30,
             )
 
             content = result.get("final_response", "")
