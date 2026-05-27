@@ -5,7 +5,7 @@ import time
 
 from hermes_bridge import run_hermes
 from coding_executor import CodingExecutor
-from project_registry import get_all_projects
+from project_registry import search_projects
 
 logger = logging.getLogger(__name__)
 
@@ -87,16 +87,16 @@ class TaskOrchestrator:
         return await self._execute_with_hermes(request, steps)
 
     async def _analyze_intent(self, request) -> dict:
-        """用 Hermes Agent 分析用户意图，结合项目注册表匹配仓库"""
+        """用 Hermes Agent 分析用户意图，按需搜索项目注册表匹配仓库"""
         start = time.time()
 
-        projects = await get_all_projects()
-        if projects:
+        matched_projects = await self._search_relevant_projects(request.background, request.goal)
+        if matched_projects:
             project_list = "\n".join(
-                f"- {p['name']}: {p['repoUrl']} (branch: {p.get('defaultBranch', 'master')}, keywords: {p.get('keywords', '')})"
-                for p in projects
+                f"- {p['name']}: {p['repoUrl']} (branch: {p.get('defaultBranch', 'master')})"
+                for p in matched_projects
             )
-            registry_section = f"\n\nKnown projects in the organization:\n{project_list}\n"
+            registry_section = f"\n\nMatched known projects:\n{project_list}\n"
         else:
             registry_section = ""
 
@@ -252,7 +252,7 @@ If no specific repo URL is mentioned and no known project matches, but the task 
         """非 coding 任务：使用 Hermes Agent 直接执行，注入项目注册表供上下文推断"""
         start = time.time()
 
-        projects = await get_all_projects()
+        projects = await self._search_relevant_projects(request.background, request.goal)
         if projects:
             project_list = "\n".join(
                 f"- {p['name']}: {p['repoUrl']} (keywords: {p.get('keywords', '')})"
@@ -334,3 +334,29 @@ If no specific repo URL is mentioned and no known project matches, but the task 
             if hint in [k.strip() for k in keywords]:
                 return p
         return None
+
+    @staticmethod
+    async def _search_relevant_projects(*texts: str) -> list[dict]:
+        """从文本中提取关键词，按需搜索项目注册表，返回匹配的项目（去重，最多10个）"""
+        import re
+        combined = " ".join(t for t in texts if t)
+        pattern = r'[a-zA-Z][a-zA-Z0-9_-]*(?:-(?:center|service|sdk|api|job|base|app|portal|agent))?'
+        candidates = re.findall(pattern, combined)
+        stop_words = {'the', 'and', 'for', 'are', 'this', 'that', 'with', 'from', 'have', 'has',
+                      'not', 'but', 'can', 'will', 'code', 'bug', 'fix', 'scan', 'check', 'null'}
+        keywords = []
+        for c in candidates:
+            if len(c) >= 3 and c.lower() not in stop_words and c not in keywords:
+                keywords.append(c)
+            if len(keywords) >= 5:
+                break
+
+        matched = []
+        seen_names = set()
+        for kw in keywords:
+            results = await search_projects(kw)
+            for p in results:
+                if p["name"] not in seen_names:
+                    seen_names.add(p["name"])
+                    matched.append(p)
+        return matched[:10]
