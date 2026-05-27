@@ -32,6 +32,10 @@ export interface Task {
   startedAt?: string;
   completedAt?: string;
   createdAt: string;
+  repoUrl?: string;
+  repoBranch?: string;
+  mrUrl?: string;
+  parentTaskId?: number;
 }
 
 export interface Artifact {
@@ -94,6 +98,7 @@ export const api = {
     execute: (id: number) => request<Task>(`/api/tasks/${id}/execute`, { method: "POST" }),
     events: (id: number) => request<TaskEvent[]>(`/api/tasks/${id}/events`),
     costEstimate: (id: number) => request<CostEstimate>(`/api/tasks/${id}/cost-estimate`),
+    subtasks: (id: number) => request<Task[]>(`/api/tasks/${id}/subtasks`),
   },
   artifacts: {
     list: (taskId: number) => request<Artifact[]>(`/api/tasks/${taskId}/artifacts`),
@@ -111,10 +116,10 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ message, model }),
       }),
-    confirm: (sessionId: string, agentType: string, modelId: string, sandboxEnabled: boolean) =>
+    confirm: (sessionId: string, agentType: string, modelId: string, sandboxEnabled: boolean, repoUrl?: string, repoBranch?: string) =>
       request<Task>(`/api/tasks/define/${sessionId}/confirm`, {
         method: "POST",
-        body: JSON.stringify({ agentType, modelId, sandboxEnabled }),
+        body: JSON.stringify({ agentType, modelId, sandboxEnabled, repoUrl: repoUrl || undefined, repoBranch: repoBranch || undefined }),
       }),
   },
   providers: {

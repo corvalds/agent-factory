@@ -142,7 +142,7 @@ public class FeishuBotService {
         String trimmed = text.trim();
         if ("确认".equals(trimmed) || "是".equals(trimmed) || "yes".equalsIgnoreCase(trimmed) || "confirm".equalsIgnoreCase(trimmed)) {
             try {
-                Task task = taskDefinitionService.confirmDefinition(session.getSessionId(), defaultAgentType, null, false);
+                Task task = taskDefinitionService.confirmDefinition(session.getSessionId(), defaultAgentType, null, false, null, null);
                 session.setTaskId(task.getId());
                 session.setState(FeishuSessionState.EXECUTING);
                 sessionRepository.save(session);

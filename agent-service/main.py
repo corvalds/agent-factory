@@ -1,12 +1,17 @@
 import os
+import logging
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
 from task_definer import TaskDefiner
 from agent_runner import AgentRunner
+from orchestrator import TaskOrchestrator
 
-app = FastAPI(title="Agent Factory - Agent Service", version="0.2.0")
+logging.basicConfig(level=logging.INFO)
+
+app = FastAPI(title="Agent Factory - Agent Service", version="0.3.0")
 definer = TaskDefiner()
 runner = AgentRunner()
+orchestrator = TaskOrchestrator()
 
 INTERNAL_KEY = os.environ.get("AF_INTERNAL_KEY", "internal-dev-key")
 
@@ -49,6 +54,7 @@ class ExecuteRequest(BaseModel):
     model: str = "gpt-4o"
     api_key: str | None = None
     base_url: str | None = None
+    extra_context: dict | None = None
 
 
 class ExecuteResponse(BaseModel):
@@ -56,9 +62,17 @@ class ExecuteResponse(BaseModel):
     steps: list[dict] = []
     total_tokens: int = 0
     status: str = "completed"
+    mr_url: str | None = None
+    subtasks: list[dict] | None = None
 
 
 @app.post("/execute", response_model=ExecuteResponse)
 async def execute(request: ExecuteRequest, x_internal_key: str = Header(None)):
     verify_internal(x_internal_key)
-    return await runner.run(request)
+    if request.agent_type == "coding-agent" or (request.extra_context and request.extra_context.get("repo_url")):
+        return await orchestrator.process(request)
+    try:
+        return await orchestrator.process(request)
+    except Exception:
+        # Fallback to legacy runner
+        return await runner.run(request)

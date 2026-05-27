@@ -1,6 +1,7 @@
 package com.agentfactory.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Map;
 
 public record ExecuteRequest(
     String background,
@@ -9,5 +10,6 @@ public record ExecuteRequest(
     @JsonProperty("agent_type") String agentType,
     String model,
     @JsonProperty("api_key") String apiKey,
-    @JsonProperty("base_url") String baseUrl
+    @JsonProperty("base_url") String baseUrl,
+    @JsonProperty("extra_context") Map<String, String> extraContext
 ) {}

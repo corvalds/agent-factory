@@ -14,9 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -104,6 +102,9 @@ public class TaskExecutionService {
                 if (response.result() != null && !response.result().isBlank()) {
                     artifactService.storeText(task, response.result());
                 }
+                if (response.mrUrl() != null) {
+                    task.setMrUrl(response.mrUrl());
+                }
             } else {
                 task.setStatus(TaskStatus.FAILED);
                 task.setError(response.result());
@@ -129,6 +130,9 @@ public class TaskExecutionService {
     }
 
     private boolean shouldUseSandbox(Task task) {
+        if ("coding-agent".equals(task.getAgentType())) {
+            return false;
+        }
         boolean agentRequires = agentTypeRepository.findAll().stream()
                 .filter(at -> at.getName().equals(task.getAgentType()))
                 .findFirst()
@@ -138,6 +142,13 @@ public class TaskExecutionService {
     }
 
     private ExecuteResponse runDirect(Task task, String apiKey, String baseUrl) {
+        Map<String, String> extraContext = new HashMap<>();
+        if (task.getRepoUrl() != null) {
+            extraContext.put("repo_url", task.getRepoUrl());
+            extraContext.put("branch", task.getRepoBranch() != null ? task.getRepoBranch() : "main");
+            extraContext.put("task_id", String.valueOf(task.getId()));
+        }
+
         ExecuteRequest request = new ExecuteRequest(
             task.getBackground() != null ? task.getBackground() : "",
             task.getGoal() != null ? task.getGoal() : task.getName(),
@@ -145,7 +156,8 @@ public class TaskExecutionService {
             task.getAgentType(),
             task.getModelId() != null ? task.getModelId() : "gpt-4o",
             apiKey,
-            baseUrl
+            baseUrl,
+            extraContext.isEmpty() ? null : extraContext
         );
         return agentClient.execute(request);
     }
@@ -177,7 +189,7 @@ public class TaskExecutionService {
             int totalTokens = output.get("total_tokens") instanceof Number n ? n.intValue() : 0;
             List<Map<String, Object>> steps = output.get("steps") instanceof List<?> l ? (List<Map<String, Object>>) l : List.of();
 
-            return new ExecuteResponse(result, steps, totalTokens, status);
+            return new ExecuteResponse(result, steps, totalTokens, status, null);
         } finally {
             sandboxService.destroySandbox(ctx);
         }

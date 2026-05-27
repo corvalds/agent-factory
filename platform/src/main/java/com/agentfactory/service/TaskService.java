@@ -45,6 +45,8 @@ public class TaskService {
         clone.setAgentType(original.getAgentType());
         clone.setModelId(original.getModelId());
         clone.setSandboxEnabled(original.isSandboxEnabled());
+        clone.setRepoUrl(original.getRepoUrl());
+        clone.setRepoBranch(original.getRepoBranch());
         clone.setStatus(TaskStatus.PENDING);
         return taskRepository.save(clone);
     }
@@ -58,5 +60,9 @@ public class TaskService {
             task.setCompletedAt(java.time.Instant.now());
         }
         return taskRepository.save(task);
+    }
+
+    public List<Task> findSubtasks(Long parentId) {
+        return taskRepository.findByParentTaskIdOrderByCreatedAtAsc(parentId);
     }
 }

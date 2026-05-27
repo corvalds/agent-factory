@@ -298,8 +298,20 @@ export default function TaskDetailPage() {
               <div className="flex justify-between"><span className="text-[#666]">Agent</span><span className="text-[#ccc] font-mono">{task.agentType}</span></div>
               <div className="flex justify-between"><span className="text-[#666]">Model</span><span className="text-[#ccc] font-mono">{task.modelId || "—"}</span></div>
               <div className="flex justify-between"><span className="text-[#666]">Sandbox</span><span className="text-[#ccc] font-mono">{task.sandboxEnabled ? "Docker" : "None"}</span></div>
+              {task.repoUrl && <div className="flex justify-between"><span className="text-[#666]">Repo</span><span className="text-[#ccc] font-mono truncate max-w-[180px]" title={task.repoUrl}>{task.repoUrl.split("/").slice(-2).join("/").replace(".git", "")}</span></div>}
+              {task.repoBranch && <div className="flex justify-between"><span className="text-[#666]">Branch</span><span className="text-[#ccc] font-mono">{task.repoBranch}</span></div>}
             </div>
           </div>
+
+          {task.mrUrl && (
+            <div className="border-t border-[#222] pt-4">
+              <div className="text-[11px] text-[#555] uppercase tracking-wider mb-2 font-semibold">Merge Request</div>
+              <a href={task.mrUrl} target="_blank" rel="noopener noreferrer"
+                className="block w-full px-3 py-2 text-[12px] text-center rounded-md bg-[#1a3a2a] border border-[#2a4a3a] text-[#4ade80] hover:bg-[#2a4a3a] transition-colors truncate">
+                {task.mrUrl}
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </div>

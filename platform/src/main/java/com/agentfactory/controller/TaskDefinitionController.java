@@ -42,10 +42,12 @@ public class TaskDefinitionController {
             sessionId,
             request.agentType(),
             request.modelId(),
-            request.sandboxEnabled() != null ? request.sandboxEnabled() : false
+            request.sandboxEnabled() != null ? request.sandboxEnabled() : false,
+            request.repoUrl(),
+            request.repoBranch()
         );
     }
 
     record MessageRequest(String message, String model) {}
-    record ConfirmRequest(String agentType, String modelId, Boolean sandboxEnabled) {}
+    record ConfirmRequest(String agentType, String modelId, Boolean sandboxEnabled, String repoUrl, String repoBranch) {}
 }

@@ -23,6 +23,8 @@ export default function NewTaskPage() {
   const [modelId, setModelId] = useState("gpt-4o");
   const [sandboxEnabled, setSandboxEnabled] = useState(false);
   const [launching, setLaunching] = useState(false);
+  const [repoUrl, setRepoUrl] = useState("");
+  const [repoBranch, setRepoBranch] = useState("");
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -63,7 +65,9 @@ export default function NewTaskPage() {
     if (!sessionId || !structured || launching) return;
     setLaunching(true);
     try {
-      const task = await api.define.confirm(sessionId, agentType, modelId, sandboxEnabled);
+      const task = await api.define.confirm(sessionId, agentType, modelId, sandboxEnabled,
+        agentType === "coding-agent" ? repoUrl : undefined,
+        agentType === "coding-agent" ? repoBranch : undefined);
       await api.tasks.execute(task.id);
       router.push(`/tasks/${task.id}`);
     } catch (e: any) {
@@ -148,8 +152,32 @@ export default function NewTaskPage() {
               <option value="web-scraper">web-scraper</option>
               <option value="code-analyst">code-analyst</option>
               <option value="general-purpose">general-purpose</option>
+              <option value="coding-agent">coding-agent</option>
             </select>
           </div>
+
+          {agentType === "coding-agent" && (
+            <>
+              <div className="mb-4">
+                <label className="block text-[11px] text-[#666] uppercase tracking-wider mb-1.5">Repository URL</label>
+                <input
+                  className="w-full bg-[#0a0a0b] border border-[#333] rounded-md px-2.5 py-2 text-[13px] text-white placeholder-[#555]"
+                  placeholder="https://github.com/org/repo.git"
+                  value={repoUrl}
+                  onChange={(e) => setRepoUrl(e.target.value)}
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-[11px] text-[#666] uppercase tracking-wider mb-1.5">Branch</label>
+                <input
+                  className="w-full bg-[#0a0a0b] border border-[#333] rounded-md px-2.5 py-2 text-[13px] text-white placeholder-[#555]"
+                  placeholder="main"
+                  value={repoBranch}
+                  onChange={(e) => setRepoBranch(e.target.value)}
+                />
+              </div>
+            </>
+          )}
 
           <div className="mb-4">
             <label className="block text-[11px] text-[#666] uppercase tracking-wider mb-1.5">LLM Model</label>

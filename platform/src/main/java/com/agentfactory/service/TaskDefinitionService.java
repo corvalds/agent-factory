@@ -70,7 +70,8 @@ public class TaskDefinitionService {
         );
     }
 
-    public Task confirmDefinition(String sessionId, String agentType, String modelId, boolean sandboxEnabled) {
+    public Task confirmDefinition(String sessionId, String agentType, String modelId, boolean sandboxEnabled,
+                                    String repoUrl, String repoBranch) {
         ConversationSession session = sessionService.get(sessionId);
         Map<String, String> definition = session.getStructuredDefinition();
 
@@ -86,6 +87,8 @@ public class TaskDefinitionService {
         task.setAgentType(agentType != null ? agentType : "general-purpose");
         task.setModelId(modelId);
         task.setSandboxEnabled(sandboxEnabled);
+        task.setRepoUrl(repoUrl);
+        task.setRepoBranch(repoBranch);
 
         Task saved = taskService.create(task);
         sessionService.complete(sessionId);

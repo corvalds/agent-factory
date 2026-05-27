@@ -10,4 +10,5 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     List<Task> findAllByOrderByCreatedAtDesc();
     List<Task> findByModelIdIn(List<String> modelIds);
     boolean existsByModelIdInAndStatus(List<String> modelIds, TaskStatus status);
+    List<Task> findByParentTaskIdOrderByCreatedAtAsc(Long parentTaskId);
 }

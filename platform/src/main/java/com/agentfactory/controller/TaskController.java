@@ -161,5 +161,10 @@ public class TaskController {
         return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
     }
 
+    @GetMapping("/{id}/subtasks")
+    public List<Task> subtasks(@PathVariable Long id) {
+        return taskService.findSubtasks(id);
+    }
+
     record StatusUpdate(TaskStatus status) {}
 }

@@ -50,6 +50,10 @@ public class Task {
 
     private Long parentTaskId;
 
+    private String repoUrl;
+    private String repoBranch;
+    private String mrUrl;
+
     @PrePersist
     void onCreate() {
         if (createdAt == null) createdAt = Instant.now();
@@ -86,4 +90,10 @@ public class Task {
     public Instant getCreatedAt() { return createdAt; }
     public Long getParentTaskId() { return parentTaskId; }
     public void setParentTaskId(Long parentTaskId) { this.parentTaskId = parentTaskId; }
+    public String getRepoUrl() { return repoUrl; }
+    public void setRepoUrl(String repoUrl) { this.repoUrl = repoUrl; }
+    public String getRepoBranch() { return repoBranch; }
+    public void setRepoBranch(String repoBranch) { this.repoBranch = repoBranch; }
+    public String getMrUrl() { return mrUrl; }
+    public void setMrUrl(String mrUrl) { this.mrUrl = mrUrl; }
 }

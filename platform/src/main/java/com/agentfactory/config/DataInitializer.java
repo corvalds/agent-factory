@@ -19,31 +19,22 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (agentTypeRepository.count() > 0) return;
+        seedIfMissing("web-scraper", "HTTP requests, HTML parsing, text extraction", "gpt-4o", true);
+        seedIfMissing("code-analyst", "File reading, code parsing, AST analysis", "claude-sonnet-4", true);
+        seedIfMissing("general-purpose", "Pure LLM text generation, translation, summarization", "gpt-4o", false);
+        seedIfMissing("coding-agent", "Clone repo, locate bugs, fix code, run tests, produce patches and MRs", "claude-sonnet-4", false);
+    }
 
-        log.info("Seeding default agent types...");
-
-        var webScraper = new AgentType();
-        webScraper.setName("web-scraper");
-        webScraper.setDescription("HTTP requests, HTML parsing, text extraction");
-        webScraper.setDefaultModel("gpt-4o");
-        webScraper.setSandboxRequired(true);
-        agentTypeRepository.save(webScraper);
-
-        var codeAnalyst = new AgentType();
-        codeAnalyst.setName("code-analyst");
-        codeAnalyst.setDescription("File reading, code parsing, AST analysis");
-        codeAnalyst.setDefaultModel("claude-sonnet-4");
-        codeAnalyst.setSandboxRequired(true);
-        agentTypeRepository.save(codeAnalyst);
-
-        var generalPurpose = new AgentType();
-        generalPurpose.setName("general-purpose");
-        generalPurpose.setDescription("Pure LLM text generation, translation, summarization");
-        generalPurpose.setDefaultModel("gpt-4o");
-        generalPurpose.setSandboxRequired(false);
-        agentTypeRepository.save(generalPurpose);
-
-        log.info("Seeded 3 agent types: web-scraper, code-analyst, general-purpose");
+    private void seedIfMissing(String name, String description, String defaultModel, boolean sandboxRequired) {
+        if (agentTypeRepository.findAll().stream().anyMatch(at -> at.getName().equals(name))) {
+            return;
+        }
+        log.info("Seeding agent type: {}", name);
+        var agentType = new AgentType();
+        agentType.setName(name);
+        agentType.setDescription(description);
+        agentType.setDefaultModel(defaultModel);
+        agentType.setSandboxRequired(sandboxRequired);
+        agentTypeRepository.save(agentType);
     }
 }
