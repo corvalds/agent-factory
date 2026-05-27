@@ -1,0 +1,25 @@
+agent-service/task_definer.py
+  dce00f8642748325 6,46,75-84,86-87,89,91,94-110
+agent-service/orchestrator.py
+  dce00f8642748325 8,90,93-94,96-97,99,255,337-362
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.16",
+  "base_commit_sha": "d181cf5dc62452825a0d89eec42d2d053212635e",
+  "prompts": {
+    "dce00f8642748325": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3ea25be1-3ccb-42fb-a031-6d3621e50873",
+        "model": "claude-opus-4.6"
+      },
+      "human_author": "corvalds <corvalds@gmail.com>",
+      "messages": [],
+      "total_additions": 69,
+      "total_deletions": 18,
+      "accepted_lines": 707,
+      "overriden_lines": 0
+    }
+  }
+}
