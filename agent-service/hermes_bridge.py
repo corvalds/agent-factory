@@ -17,7 +17,7 @@ _executor = ThreadPoolExecutor(max_workers=4)
 def resolve_model(model: str) -> str:
     """将 platform 的 model 名转为 Hermes 的 provider/model 格式"""
     if not model:
-        return "anthropic/claude-sonnet-4"
+        return "openai/gpt-4o"
     if model.startswith(("openai/", "anthropic/", "deepseek/", "openrouter/")):
         return model
     if "claude" in model:
@@ -27,13 +27,15 @@ def resolve_model(model: str) -> str:
     return f"openai/{model}"
 
 
-def _run_sync(model: str, api_key: str, system_message: str, user_message: str, max_iterations: int) -> dict:
+def _run_sync(model: str, api_key: str, base_url: str, system_message: str, user_message: str, max_iterations: int) -> dict:
     """同步调用 Hermes AIAgent"""
     from hermes_agent import AIAgent
 
     agent_kwargs = {"model": model, "max_iterations": max_iterations}
     if api_key:
         agent_kwargs["api_key"] = api_key
+    if base_url:
+        agent_kwargs["base_url"] = base_url
 
     agent = AIAgent(**agent_kwargs)
     return agent.run_conversation(
@@ -42,19 +44,20 @@ def _run_sync(model: str, api_key: str, system_message: str, user_message: str, 
     )
 
 
-async def run_hermes(model: str, api_key: str, system_message: str, user_message: str, max_iterations: int = 30) -> dict:
+async def run_hermes(model: str, api_key: str, system_message: str, user_message: str, max_iterations: int = 30, base_url: str = None) -> dict:
     """
     统一的 Hermes 异步调用入口。
 
     返回 Hermes 的 result dict，包含 final_response 等字段。
     """
     hermes_model = resolve_model(model)
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     return await loop.run_in_executor(
         _executor,
         _run_sync,
         hermes_model,
         api_key,
+        base_url or "",
         system_message,
         user_message,
         max_iterations,

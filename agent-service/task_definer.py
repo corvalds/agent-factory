@@ -27,6 +27,7 @@ class TaskDefiner:
                 system_message=self.SYSTEM_PROMPT,
                 user_message=user_message,
                 max_iterations=5,
+                base_url=base_url,
             )
 
             reply = result.get("final_response", "")
